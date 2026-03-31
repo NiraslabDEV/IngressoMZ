@@ -1,0 +1,53 @@
+{
+  "common": {
+    "appName": "Ingresso MZ",
+    "buy": "Comprar",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "loading": "A carregar...",
+    "error": "Ocorreu um erro. Tente novamente."
+  },
+  "nav": {
+    "home": "Início",
+    "myTickets": "Meus Ingressos",
+    "myEvents": "Meus Eventos",
+    "createEvent": "Criar Evento",
+    "login": "Entrar",
+    "logout": "Sair"
+  },
+  "auth": {
+    "loginTitle": "Entrar na conta",
+    "registerTitle": "Criar conta",
+    "email": "Email",
+    "password": "Palavra-passe",
+    "name": "Nome completo",
+    "loginWithGoogle": "Entrar com Google",
+    "loginWithApple": "Entrar com Apple",
+    "invalidCredentials": "Credenciais inválidas."
+  },
+  "events": {
+    "featured": "Eventos em Destaque",
+    "upcoming": "Próximos Eventos",
+    "noEvents": "Nenhum evento disponível.",
+    "ticketsFrom": "Ingressos a partir de",
+    "buyTickets": "Comprar Ingressos",
+    "soldOut": "Esgotado"
+  },
+  "organizer": {
+    "dashboard": "Painel",
+    "myEvents": "Os Meus Eventos",
+    "createEvent": "Criar Evento",
+    "checkin": "Validar Entradas",
+    "revenue": "Receita Total",
+    "ticketsSold": "Ingressos Vendidos"
+  },
+  "payment": {
+    "selectMethod": "Selecionar método de pagamento",
+    "mpesa": "M-Pesa",
+    "emola": "e-Mola",
+    "card": "Cartão",
+    "processing": "A processar pagamento...",
+    "success": "Pagamento confirmado!",
+    "failed": "Pagamento falhado. Tente novamente."
+  }
+}

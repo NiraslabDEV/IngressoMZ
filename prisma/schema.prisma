@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  BUYER
+  ORGANIZER
+  ADMIN
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  FINISHED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+  REFUNDED
+}
+
+enum TicketStatus {
+  ACTIVE
+  USED
+  CANCELLED
+}
+
+enum PaymentProvider {
+  MPESA
+  EMOLA
+  STRIPE
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String?
+  role         Role     @default(BUYER)
+  createdAt    DateTime @default(now())
+
+  events       Event[]
+  orders       Order[]
+  checkIns     Ticket[] @relation("CheckedInBy")
+
+  // Auth.js
+  accounts     Account[]
+  sessions     Session[]
+}
+
+model Event {
+  id                 String      @id @default(uuid())
+  organizerId        String
+  title              String      @db.VarChar(120)
+  description        String      @db.VarChar(2000)
+  venue              String      @db.VarChar(200)
+  startsAt           DateTime
+  endsAt             DateTime?
+  imageUrl           String?
+  status             EventStatus @default(DRAFT)
+  platformFeePercent Decimal     @default(7.5) @db.Decimal(5, 2)
+  createdAt          DateTime    @default(now())
+
+  organizer  User          @relation(fields: [organizerId], references: [id])
+  tiers      TicketTier[]
+  orders     Order[]
+  highlights EventHighlight[]
+}
+
+model TicketTier {
+  id         String    @id @default(uuid())
+  eventId    String
+  name       String    @db.VarChar(80)
+  price      Decimal   @db.Decimal(10, 2)
+  totalQty   Int
+  soldQty    Int       @default(0)
+  salesEndAt DateTime?
+
+  event Event        @relation(fields: [eventId], references: [id])
+  items OrderItem[]
+  tickets Ticket[]
+}
+
+model Order {
+  id           String      @id @default(uuid())
+  buyerId      String
+  eventId      String
+  status       OrderStatus @default(PENDING)
+  totalAmount  Decimal     @db.Decimal(10, 2)
+  platformFee  Decimal     @db.Decimal(10, 2)
+  createdAt    DateTime    @default(now())
+
+  buyer    User        @relation(fields: [buyerId], references: [id])
+  event    Event       @relation(fields: [eventId], references: [id])
+  items    OrderItem[]
+  tickets  Ticket[]
+  payments Payment[]
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  tierId    String
+  quantity  Int
+  unitPrice Decimal @db.Decimal(10, 2)
+
+  order Order      @relation(fields: [orderId], references: [id])
+  tier  TicketTier @relation(fields: [tierId], references: [id])
+}
+
+model Ticket {
+  id          String       @id @default(uuid())
+  orderId     String
+  tierId      String
+  token       String       @unique
+  status      TicketStatus @default(ACTIVE)
+  checkedInAt DateTime?
+  checkedInBy String?
+
+  order      Order      @relation(fields: [orderId], references: [id])
+  tier       TicketTier @relation(fields: [tierId], references: [id])
+  checkedBy  User?      @relation("CheckedInBy", fields: [checkedInBy], references: [id])
+}
+
+model Payment {
+  id             String          @id @default(uuid())
+  orderId        String
+  provider       PaymentProvider
+  providerRef    String?
+  idempotencyKey String          @unique
+  amount         Decimal         @db.Decimal(10, 2)
+  status         PaymentStatus   @default(PENDING)
+  createdAt      DateTime        @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+}
+
+model EventHighlight {
+  id          String   @id @default(uuid())
+  eventId     String
+  startsAt    DateTime
+  endsAt      DateTime
+  position    Int
+  paidAmount  Decimal  @db.Decimal(10, 2)
+
+  event Event @relation(fields: [eventId], references: [id])
+}
+
+// Auth.js required tables
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

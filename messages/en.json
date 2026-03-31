@@ -1,0 +1,53 @@
+{
+  "common": {
+    "appName": "Ingresso MZ",
+    "buy": "Buy",
+    "cancel": "Cancel",
+    "save": "Save",
+    "loading": "Loading...",
+    "error": "An error occurred. Please try again."
+  },
+  "nav": {
+    "home": "Home",
+    "myTickets": "My Tickets",
+    "myEvents": "My Events",
+    "createEvent": "Create Event",
+    "login": "Sign In",
+    "logout": "Sign Out"
+  },
+  "auth": {
+    "loginTitle": "Sign in to your account",
+    "registerTitle": "Create account",
+    "email": "Email",
+    "password": "Password",
+    "name": "Full name",
+    "loginWithGoogle": "Sign in with Google",
+    "loginWithApple": "Sign in with Apple",
+    "invalidCredentials": "Invalid credentials."
+  },
+  "events": {
+    "featured": "Featured Events",
+    "upcoming": "Upcoming Events",
+    "noEvents": "No events available.",
+    "ticketsFrom": "Tickets from",
+    "buyTickets": "Buy Tickets",
+    "soldOut": "Sold Out"
+  },
+  "organizer": {
+    "dashboard": "Dashboard",
+    "myEvents": "My Events",
+    "createEvent": "Create Event",
+    "checkin": "Validate Entry",
+    "revenue": "Total Revenue",
+    "ticketsSold": "Tickets Sold"
+  },
+  "payment": {
+    "selectMethod": "Select payment method",
+    "mpesa": "M-Pesa",
+    "emola": "e-Mola",
+    "card": "Card",
+    "processing": "Processing payment...",
+    "success": "Payment confirmed!",
+    "failed": "Payment failed. Please try again."
+  }
+}
