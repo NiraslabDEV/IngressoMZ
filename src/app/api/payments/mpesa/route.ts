@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { initiateMpesaPayment } from "@/lib/payments/mpesa";
+import { initiateMpesaPayment } from "@/lib/payments/e2payments";
 
-// Números moçambicanos: Vodacom 84/85/86, Movitel 82/83, Tmcel 87 — 9 dígitos
+// Vodacom 84/85/86, Movitel 82/83, Tmcel 87 — 9 dígitos sem código de país
 const MZ_PHONE_RE = /^8[2-7]\d{7}$/;
 
 const mpesaSchema = z.object({

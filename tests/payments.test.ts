@@ -2,13 +2,19 @@ import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { POST as initiateMpesa } from "@/app/api/payments/mpesa/route";
 import { POST as initiateEmola } from "@/app/api/payments/emola/route";
-import { POST as mpesaWebhook } from "@/app/api/payments/webhooks/mpesa/route";
+import { GET as pollPayment } from "@/app/api/payments/poll/[paymentId]/route";
 import { POST as stripeWebhook } from "@/app/api/payments/webhooks/stripe/route";
 import { NextRequest } from "next/server";
-import crypto from "crypto";
+import * as e2payments from "@/lib/payments/e2payments";
+
+jest.mock("@/lib/payments/e2payments", () => ({
+  initiateMpesaPayment: jest.fn(),
+  getMpesaPayments: jest.fn(),
+}));
 
 const mockDb = db as jest.Mocked<typeof db>;
 const mockAuth = auth as jest.Mock;
+const mockE2P = e2payments as jest.Mocked<typeof e2payments>;
 
 const BUYER = { id: "buyer-1", role: "BUYER" };
 
@@ -27,6 +33,12 @@ function makePaymentReq(body: unknown) {
   });
 }
 
+function makePollReq(paymentId: string) {
+  return new NextRequest(`http://localhost/api/payments/poll/${paymentId}`, {
+    method: "GET",
+  });
+}
+
 // ─── INICIAR PAGAMENTO ────────────────────────────────────────────────────────
 
 describe("POST /api/payments/mpesa", () => {
@@ -34,7 +46,8 @@ describe("POST /api/payments/mpesa", () => {
     it("201 — cria payment com idempotencyKey único", async () => {
       mockAuth.mockResolvedValue({ user: BUYER });
       mockDb.order.findUnique.mockResolvedValue(PENDING_ORDER as any);
-      mockDb.payment.findUnique.mockResolvedValue(null); // key não usada
+      mockDb.payment.findUnique.mockResolvedValue(null);
+      mockE2P.initiateMpesaPayment.mockResolvedValue({ success: true, providerRef: "E2P-REF-123" });
       mockDb.payment.create.mockResolvedValue({ id: "pay-1" } as any);
 
       const res = await initiateMpesa(makePaymentReq({
@@ -60,7 +73,7 @@ describe("POST /api/payments/mpesa", () => {
       mockAuth.mockResolvedValue({ user: { id: "buyer-99", role: "BUYER" } });
       mockDb.order.findUnique.mockResolvedValue({
         ...PENDING_ORDER,
-        buyerId: "buyer-1", // dono é buyer-1, não buyer-99
+        buyerId: "buyer-1",
       } as any);
 
       const res = await initiateMpesa(makePaymentReq({
@@ -76,7 +89,7 @@ describe("POST /api/payments/mpesa", () => {
     it("409 ao reutilizar idempotencyKey já processada", async () => {
       mockAuth.mockResolvedValue({ user: BUYER });
       mockDb.order.findUnique.mockResolvedValue(PENDING_ORDER as any);
-      mockDb.payment.findUnique.mockResolvedValue({ id: "pay-existente" } as any); // key já existe
+      mockDb.payment.findUnique.mockResolvedValue({ id: "pay-existente" } as any);
 
       const res = await initiateMpesa(makePaymentReq({
         orderId: "order-1",
@@ -91,7 +104,6 @@ describe("POST /api/payments/mpesa", () => {
       const res = await initiateMpesa(makePaymentReq({
         orderId: "order-1",
         phone: "841234567",
-        // sem idempotencyKey
       }));
       expect(res.status).toBe(400);
     });
@@ -116,7 +128,7 @@ describe("POST /api/payments/mpesa", () => {
 
       const res = await initiateMpesa(makePaymentReq({
         orderId: "order-1",
-        phone: "123", // inválido
+        phone: "123",
         idempotencyKey: "idem-key-novo",
       }));
       expect(res.status).toBe(400);
@@ -134,81 +146,73 @@ describe("POST /api/payments/mpesa", () => {
   });
 });
 
-// ─── WEBHOOK M-PESA ───────────────────────────────────────────────────────────
+// ─── POLLING DE PAGAMENTO ─────────────────────────────────────────────────────
 
-describe("POST /api/payments/webhooks/mpesa", () => {
-  it("400 sem assinatura HMAC no header", async () => {
-    const req = new NextRequest("http://localhost/api/payments/webhooks/mpesa", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      // sem x-mpesa-signature
-      body: JSON.stringify({ orderId: "order-1", status: "COMPLETED" }),
-    });
+describe("GET /api/payments/poll/[paymentId]", () => {
+  const PENDING_PAYMENT = {
+    id: "pay-1",
+    orderId: "order-1",
+    idempotencyKey: "idem-key-123",
+    status: "PENDING",
+    order: { buyerId: "buyer-1" },
+  };
 
-    const res = await mpesaWebhook(req);
-    expect(res.status).toBe(401);
-  });
+  it("200 PENDING — e2Payments ainda não confirmou", async () => {
+    mockAuth.mockResolvedValue({ user: BUYER });
+    mockDb.payment.findUnique.mockResolvedValue(PENDING_PAYMENT as any);
+    mockE2P.getMpesaPayments.mockResolvedValue([]);
 
-  it("401 com assinatura inválida (webhook forjado)", async () => {
-    const body = JSON.stringify({ orderId: "order-1", status: "COMPLETED" });
-    const fakeSignature = "sha256=invalido";
-
-    const req = new NextRequest("http://localhost/api/payments/webhooks/mpesa", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-mpesa-signature": fakeSignature,
-      },
-      body,
-    });
-
-    const res = await mpesaWebhook(req);
-    expect(res.status).toBe(401);
-  });
-
-  it("200 com assinatura HMAC válida e processa pagamento", async () => {
-    const secret = process.env.MPESA_API_KEY || "test-secret";
-    const body = JSON.stringify({ providerRef: "MPESA-REF-123", status: "COMPLETED" });
-    const sig = crypto.createHmac("sha256", secret).update(body).digest("hex");
-
-    mockDb.payment.findFirst.mockResolvedValue({ id: "pay-1", orderId: "order-1", status: "PENDING" } as any);
-    mockDb.payment.update.mockResolvedValue({ id: "pay-1", status: "COMPLETED" } as any);
-    mockDb.order.update.mockResolvedValue({ id: "order-1", status: "PAID" } as any);
-    mockDb.ticket.updateMany.mockResolvedValue({ count: 2 } as any);
-
-    const req = new NextRequest("http://localhost/api/payments/webhooks/mpesa", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-mpesa-signature": `sha256=${sig}`,
-      },
-      body,
-    });
-
-    const res = await mpesaWebhook(req);
+    const res = await pollPayment(makePollReq("pay-1"), { params: { paymentId: "pay-1" } });
     expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.status).toBe("PENDING");
   });
 
-  it("idempotente — ignora webhook duplicado para payment já COMPLETED", async () => {
-    const secret = process.env.MPESA_API_KEY || "test-secret";
-    const body = JSON.stringify({ providerRef: "MPESA-REF-123", status: "COMPLETED" });
-    const sig = crypto.createHmac("sha256", secret).update(body).digest("hex");
+  it("200 COMPLETED — e2Payments confirmou, actualiza DB", async () => {
+    mockAuth.mockResolvedValue({ user: BUYER });
+    mockDb.payment.findUnique.mockResolvedValue(PENDING_PAYMENT as any);
+    mockE2P.getMpesaPayments.mockResolvedValue([
+      { reference: "idem-key-123", status: "COMPLETED" },
+    ]);
+    mockDb.payment.update.mockResolvedValue({} as any);
+    mockDb.order.update.mockResolvedValue({} as any);
+    mockDb.ticket.updateMany.mockResolvedValue({ count: 1 } as any);
 
-    // Simula payment já processado
-    mockDb.payment.findFirst.mockResolvedValue({ id: "pay-1", status: "COMPLETED" } as any);
+    const res = await pollPayment(makePollReq("pay-1"), { params: { paymentId: "pay-1" } });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.status).toBe("COMPLETED");
+    expect(mockDb.order.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: "PAID" } })
+    );
+  });
 
-    const req = new NextRequest("http://localhost/api/payments/webhooks/mpesa", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-mpesa-signature": `sha256=${sig}`,
-      },
-      body,
-    });
+  it("200 COMPLETED directo — já confirmado na DB, não chama e2Payments", async () => {
+    mockAuth.mockResolvedValue({ user: BUYER });
+    mockDb.payment.findUnique.mockResolvedValue({
+      ...PENDING_PAYMENT,
+      status: "COMPLETED",
+    } as any);
 
-    const res = await mpesaWebhook(req);
-    expect(res.status).toBe(200); // retorna 200 mas não re-processa
-    expect(mockDb.order.update).not.toHaveBeenCalled();
+    const res = await pollPayment(makePollReq("pay-1"), { params: { paymentId: "pay-1" } });
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.status).toBe("COMPLETED");
+    expect(mockE2P.getMpesaPayments).not.toHaveBeenCalled();
+  });
+
+  it("401 sem autenticação", async () => {
+    mockAuth.mockResolvedValue(null);
+    const res = await pollPayment(makePollReq("pay-1"), { params: { paymentId: "pay-1" } });
+    expect(res.status).toBe(401);
+  });
+
+  it("403 IDOR — comprador consultando pagamento de outro", async () => {
+    mockAuth.mockResolvedValue({ user: { id: "buyer-99", role: "BUYER" } });
+    mockDb.payment.findUnique.mockResolvedValue(PENDING_PAYMENT as any);
+
+    const res = await pollPayment(makePollReq("pay-1"), { params: { paymentId: "pay-1" } });
+    expect(res.status).toBe(403);
   });
 });
 

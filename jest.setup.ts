@@ -1,7 +1,9 @@
 // Variáveis de ambiente para testes
-process.env.MPESA_API_KEY = process.env.MPESA_API_KEY || "test-secret";
-process.env.EMOLA_API_KEY = process.env.EMOLA_API_KEY || "test-secret";
 process.env.NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || "test-nextauth-secret";
+process.env.E2P_CLIENT_ID = process.env.E2P_CLIENT_ID || "test-client-id";
+process.env.E2P_CLIENT_SECRET = process.env.E2P_CLIENT_SECRET || "test-client-secret";
+process.env.E2P_WALLET_ID = process.env.E2P_WALLET_ID || "test-wallet-id";
+process.env.EMOLA_API_KEY = process.env.EMOLA_API_KEY || "test-secret";
 
 jest.mock("@/lib/db", () => ({
   db: {
