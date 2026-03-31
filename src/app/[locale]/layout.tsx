@@ -1,0 +1,90 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages } from "next-intl/server";
+import { auth } from "@/lib/auth";
+import Link from "next/link";
+import "../globals.css";
+
+export const metadata: Metadata = {
+  title: "Ingresso MZ — Eventos em Moçambique",
+  description: "Compra os teus ingressos para os melhores eventos em Moçambique.",
+};
+
+const locales = ["pt", "en"];
+
+async function Navbar({ locale }: { locale: string }) {
+  const session = await auth();
+  const role = (session?.user as { role?: string } | undefined)?.role;
+
+  return (
+    <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <Link href={`/${locale}`} className="text-xl font-bold text-orange-500">
+          Ingresso MZ
+        </Link>
+
+        <nav className="flex items-center gap-4">
+          {session?.user ? (
+            <>
+              {role === "ORGANIZER" && (
+                <Link
+                  href={`/${locale}/organizer/dashboard`}
+                  className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  Painel
+                </Link>
+              )}
+              {role === "BUYER" && (
+                <Link
+                  href={`/${locale}/buyer/tickets`}
+                  className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                >
+                  Meus Ingressos
+                </Link>
+              )}
+            </>
+          ) : (
+            <>
+              <Link
+                href={`/${locale}/auth/login`}
+                className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                Entrar
+              </Link>
+              <Link
+                href={`/${locale}/auth/register`}
+                className="bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+              >
+                Criar conta
+              </Link>
+            </>
+          )}
+        </nav>
+      </div>
+    </header>
+  );
+}
+
+export default async function LocaleLayout({
+  children,
+  params: { locale },
+}: {
+  children: React.ReactNode;
+  params: { locale: string };
+}) {
+  if (!locales.includes(locale)) notFound();
+
+  const messages = await getMessages();
+
+  return (
+    <html lang={locale}>
+      <body>
+        <NextIntlClientProvider messages={messages}>
+          <Navbar locale={locale} />
+          {children}
+        </NextIntlClientProvider>
+      </body>
+    </html>
+  );
+}

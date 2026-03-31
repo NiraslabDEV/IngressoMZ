@@ -14,6 +14,7 @@ const registerSchema = z.object({
   password: z
     .string()
     .min(8, "Palavra-passe deve ter pelo menos 8 caracteres."),
+  role: z.enum(["BUYER", "ORGANIZER"]).optional().default("BUYER"),
 });
 
 export async function POST(req: NextRequest) {
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Dados inválidos." }, { status: 400 });
   }
 
-  const { name, email, password } = parsed.data;
+  const { name, email, password, role } = parsed.data;
 
   const existing = await db.user.findUnique({ where: { email } });
   if (existing) {
@@ -43,7 +44,7 @@ export async function POST(req: NextRequest) {
   const passwordHash = await bcrypt.hash(password, 12);
 
   const user = await db.user.create({
-    data: { name, email, passwordHash, role: "BUYER" },
+    data: { name, email, passwordHash, role },
   });
 
   // Nunca expor passwordHash — removido explicitamente antes de serializar

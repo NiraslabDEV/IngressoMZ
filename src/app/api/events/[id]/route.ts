@@ -29,21 +29,31 @@ const updateEventSchema = z.object({
     .refine((v) => new Date(v) > new Date(), { message: "Data deve ser no futuro." })
     .optional(),
   endsAt: z.string().datetime().optional(),
-  status: z.enum(["DRAFT", "PUBLISHED", "CANCELLED"]).optional(),
+  status: z.enum(["DRAFT", "PUBLISHED", "CANCELLED", "FINISHED"]).optional(),
 });
 
 type RouteParams = { params: { id: string } };
 
 // ─── GET /api/events/[id] ─────────────────────────────────────────────────────
 
-export async function GET(_req: NextRequest, { params }: RouteParams) {
+export async function GET(req: NextRequest, { params }: RouteParams) {
+  const session = await auth();
+  const role = (session?.user as { role?: string } | undefined)?.role;
+
   const event = await db.event.findUnique({
     where: { id: params.id },
     include: { tiers: true, highlights: true },
   });
 
-  if (!event || event.status === "DRAFT") {
+  if (!event) {
     return NextResponse.json({ error: "Não encontrado." }, { status: 404 });
+  }
+
+  // Rascunhos só visíveis para o próprio organizador
+  if (event.status === "DRAFT") {
+    if (role !== "ORGANIZER" || event.organizerId !== session!.user!.id) {
+      return NextResponse.json({ error: "Não encontrado." }, { status: 404 });
+    }
   }
 
   return NextResponse.json(event);

@@ -1,0 +1,231 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
+
+interface Tier {
+  id?: string;
+  name: string;
+  price: string;
+  totalQty: string;
+  salesEndAt: string;
+}
+
+interface EventData {
+  id: string;
+  title: string;
+  description: string;
+  venue: string;
+  startsAt: string;
+  endsAt: string;
+  status: string;
+  tiers: Tier[];
+}
+
+const STATUS_OPTIONS = [
+  { value: "DRAFT", label: "Rascunho" },
+  { value: "PUBLISHED", label: "Publicado" },
+  { value: "CANCELLED", label: "Cancelado" },
+  { value: "FINISHED", label: "Finalizado" },
+];
+
+function toDatetimeLocal(iso: string) {
+  if (!iso) return "";
+  return iso.slice(0, 16);
+}
+
+export default function EditEventPage() {
+  const router = useRouter();
+  const { locale, id } = useParams() as { locale: string; id: string };
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [venue, setVenue] = useState("");
+  const [startsAt, setStartsAt] = useState("");
+  const [endsAt, setEndsAt] = useState("");
+  const [status, setStatus] = useState("DRAFT");
+
+  useEffect(() => {
+    fetch(`/api/events/${id}`)
+      .then((r) => r.json())
+      .then((data: EventData) => {
+        setTitle(data.title);
+        setDescription(data.description);
+        setVenue(data.venue);
+        setStartsAt(toDatetimeLocal(data.startsAt));
+        setEndsAt(toDatetimeLocal(data.endsAt));
+        setStatus(data.status);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("Erro ao carregar o evento.");
+        setLoading(false);
+      });
+  }, [id]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setSaving(true);
+
+    try {
+      const res = await fetch(`/api/events/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          description,
+          venue,
+          startsAt: new Date(startsAt).toISOString(),
+          endsAt: endsAt ? new Date(endsAt).toISOString() : undefined,
+          status,
+        }),
+      });
+
+      if (!res.ok) {
+        const d = await res.json();
+        setError(d.error ?? "Erro ao guardar.");
+        return;
+      }
+
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch {
+      setError("Erro de conexão.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="p-8 text-center text-gray-400 text-sm">A carregar evento...</div>
+    );
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto p-8">
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Editar Evento</h1>
+        <button
+          onClick={() => router.push(`/${locale}/organizer/events`)}
+          className="text-sm text-gray-500 hover:text-gray-700"
+        >
+          ← Voltar
+        </button>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
+            ✓ Evento guardado com sucesso!
+          </div>
+        )}
+
+        <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-gray-800">Informações do Evento</h2>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+            >
+              {STATUS_OPTIONS.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Título</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              maxLength={120}
+              required
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              maxLength={2000}
+              required
+              rows={4}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Local</label>
+            <input
+              type="text"
+              value={venue}
+              onChange={(e) => setVenue(e.target.value)}
+              maxLength={200}
+              required
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Início</label>
+              <input
+                type="datetime-local"
+                value={startsAt}
+                onChange={(e) => setStartsAt(e.target.value)}
+                required
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Fim (opcional)
+              </label>
+              <input
+                type="datetime-local"
+                value={endsAt}
+                onChange={(e) => setEndsAt(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => router.push(`/${locale}/organizer/events/${id}/checkin`)}
+            className="border border-orange-300 text-orange-600 py-3 px-5 rounded-xl font-medium hover:bg-orange-50 transition-colors text-sm"
+          >
+            🎟️ Check-in
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl font-medium transition-colors disabled:opacity-50"
+          >
+            {saving ? "A guardar..." : "Guardar Alterações"}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
