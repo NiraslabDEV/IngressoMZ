@@ -29,7 +29,7 @@ export async function POST(_req: NextRequest, { params }: RouteParams) {
   }
 
   // Ownership check
-  if (ticket.order.event.organizerId !== session.user.id) {
+  if (ticket.order.event.organizerId !== session!.user!.id) {
     return NextResponse.json({ error: "Proibido." }, { status: 403 });
   }
 
