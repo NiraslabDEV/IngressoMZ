@@ -1,11 +1,11 @@
 import { db } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 import { GET as getTicket } from "@/app/api/tickets/[token]/route";
 import { POST as checkIn } from "@/app/api/tickets/[token]/checkin/route";
 import { NextRequest } from "next/server";
 
 const mockDb = db as jest.Mocked<typeof db>;
-const mockAuth = auth as jest.Mock;
+const mockGetServerSession = getServerSession as jest.Mock;
 
 const ORGANIZER = { id: "org-1", role: "ORGANIZER" };
 const OTHER_ORGANIZER = { id: "org-2", role: "ORGANIZER" };
@@ -39,7 +39,7 @@ function makeReq(method: string, token: string) {
 
 describe("GET /api/tickets/[token]", () => {
   it("200 — organizador do evento consulta ingresso válido", async () => {
-    mockAuth.mockResolvedValue({ user: ORGANIZER });
+    mockGetServerSession.mockResolvedValue({ user: ORGANIZER });
     mockDb.ticket.findUnique.mockResolvedValue(ACTIVE_TICKET as any);
 
     const res = await getTicket(makeReq("GET", "valid-token-abc123"), { params: { token: "valid-token-abc123" } });
@@ -47,13 +47,13 @@ describe("GET /api/tickets/[token]", () => {
   });
 
   it("401 sem autenticação", async () => {
-    mockAuth.mockResolvedValue(null);
+    mockGetServerSession.mockResolvedValue(null);
     const res = await getTicket(makeReq("GET", "valid-token-abc123"), { params: { token: "valid-token-abc123" } });
     expect(res.status).toBe(401);
   });
 
   it("403 — organizador de outro evento tentando consultar ingresso alheio", async () => {
-    mockAuth.mockResolvedValue({ user: OTHER_ORGANIZER }); // org-2
+    mockGetServerSession.mockResolvedValue({ user: OTHER_ORGANIZER }); // org-2
     mockDb.ticket.findUnique.mockResolvedValue(ACTIVE_TICKET as any); // evento pertence ao org-1
 
     const res = await getTicket(makeReq("GET", "valid-token-abc123"), { params: { token: "valid-token-abc123" } });
@@ -61,7 +61,7 @@ describe("GET /api/tickets/[token]", () => {
   });
 
   it("404 para token inexistente", async () => {
-    mockAuth.mockResolvedValue({ user: ORGANIZER });
+    mockGetServerSession.mockResolvedValue({ user: ORGANIZER });
     mockDb.ticket.findUnique.mockResolvedValue(null);
 
     const res = await getTicket(makeReq("GET", "token-que-nao-existe"), { params: { token: "token-que-nao-existe" } });
@@ -69,7 +69,7 @@ describe("GET /api/tickets/[token]", () => {
   });
 
   it("comprador NÃO pode consultar ingresso via endpoint de check-in", async () => {
-    mockAuth.mockResolvedValue({ user: BUYER });
+    mockGetServerSession.mockResolvedValue({ user: BUYER });
     const res = await getTicket(makeReq("GET", "valid-token-abc123"), { params: { token: "valid-token-abc123" } });
     expect(res.status).toBe(403);
   });
@@ -80,7 +80,7 @@ describe("GET /api/tickets/[token]", () => {
 describe("POST /api/tickets/[token]/checkin", () => {
   describe("Happy path", () => {
     it("200 — organizador valida ingresso ativo", async () => {
-      mockAuth.mockResolvedValue({ user: ORGANIZER });
+      mockGetServerSession.mockResolvedValue({ user: ORGANIZER });
       mockDb.ticket.findUnique.mockResolvedValue(ACTIVE_TICKET as any);
       mockDb.ticket.update.mockResolvedValue({
         ...ACTIVE_TICKET,
@@ -97,19 +97,19 @@ describe("POST /api/tickets/[token]/checkin", () => {
 
   describe("Segurança — autenticação e autorização", () => {
     it("401 sem autenticação", async () => {
-      mockAuth.mockResolvedValue(null);
+      mockGetServerSession.mockResolvedValue(null);
       const res = await checkIn(makeReq("POST", "valid-token-abc123"), { params: { token: "valid-token-abc123" } });
       expect(res.status).toBe(401);
     });
 
     it("403 — BUYER tentando fazer check-in", async () => {
-      mockAuth.mockResolvedValue({ user: BUYER });
+      mockGetServerSession.mockResolvedValue({ user: BUYER });
       const res = await checkIn(makeReq("POST", "valid-token-abc123"), { params: { token: "valid-token-abc123" } });
       expect(res.status).toBe(403);
     });
 
     it("403 IDOR — organizador de outro evento tentando validar ingresso alheio", async () => {
-      mockAuth.mockResolvedValue({ user: OTHER_ORGANIZER }); // org-2
+      mockGetServerSession.mockResolvedValue({ user: OTHER_ORGANIZER }); // org-2
       mockDb.ticket.findUnique.mockResolvedValue(ACTIVE_TICKET as any); // evento é do org-1
 
       const res = await checkIn(makeReq("POST", "valid-token-abc123"), { params: { token: "valid-token-abc123" } });
@@ -119,7 +119,7 @@ describe("POST /api/tickets/[token]/checkin", () => {
 
   describe("Segurança — regras de negócio", () => {
     it("409 — ingresso já utilizado (previne entrada dupla)", async () => {
-      mockAuth.mockResolvedValue({ user: ORGANIZER });
+      mockGetServerSession.mockResolvedValue({ user: ORGANIZER });
       mockDb.ticket.findUnique.mockResolvedValue({
         ...ACTIVE_TICKET,
         status: "USED",
@@ -131,7 +131,7 @@ describe("POST /api/tickets/[token]/checkin", () => {
     });
 
     it("400 — ingresso cancelado não pode ser validado", async () => {
-      mockAuth.mockResolvedValue({ user: ORGANIZER });
+      mockGetServerSession.mockResolvedValue({ user: ORGANIZER });
       mockDb.ticket.findUnique.mockResolvedValue({
         ...ACTIVE_TICKET,
         status: "CANCELLED",
@@ -142,7 +142,7 @@ describe("POST /api/tickets/[token]/checkin", () => {
     });
 
     it("400 — evento ainda não começou (check-in prematuro)", async () => {
-      mockAuth.mockResolvedValue({ user: ORGANIZER });
+      mockGetServerSession.mockResolvedValue({ user: ORGANIZER });
       mockDb.ticket.findUnique.mockResolvedValue({
         ...ACTIVE_TICKET,
         order: {
@@ -159,7 +159,7 @@ describe("POST /api/tickets/[token]/checkin", () => {
     });
 
     it("404 para token inexistente (não vaza informação)", async () => {
-      mockAuth.mockResolvedValue({ user: ORGANIZER });
+      mockGetServerSession.mockResolvedValue({ user: ORGANIZER });
       mockDb.ticket.findUnique.mockResolvedValue(null);
 
       const res = await checkIn(makeReq("POST", "token-inventado"), { params: { token: "token-inventado" } });
@@ -169,7 +169,7 @@ describe("POST /api/tickets/[token]/checkin", () => {
 
   describe("Segurança — race condition (dupla entrada simultânea)", () => {
     it("usa $transaction para garantir atomicidade no check-in", async () => {
-      mockAuth.mockResolvedValue({ user: ORGANIZER });
+      mockGetServerSession.mockResolvedValue({ user: ORGANIZER });
       // Ticket aparece ACTIVE fora da transaction...
       mockDb.ticket.findUnique.mockResolvedValue(ACTIVE_TICKET as any);
 

@@ -54,5 +54,10 @@ jest.mock("@/lib/db", () => ({
 }));
 
 jest.mock("@/lib/auth", () => ({
-  auth: jest.fn(),
+  authOptions: {},
+}));
+
+jest.mock("next-auth", () => ({
+  getServerSession: jest.fn(),
+  default: jest.fn(),
 }));

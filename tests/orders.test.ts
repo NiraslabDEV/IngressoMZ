@@ -1,11 +1,11 @@
 import { db } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 import { POST as createOrder } from "@/app/api/orders/route";
 import { GET as getOrder } from "@/app/api/orders/[id]/route";
 import { NextRequest } from "next/server";
 
 const mockDb = db as jest.Mocked<typeof db>;
-const mockAuth = auth as jest.Mock;
+const mockGetServerSession = getServerSession as jest.Mock;
 
 const BUYER = { id: "buyer-1", role: "BUYER" };
 const OTHER_BUYER = { id: "buyer-2", role: "BUYER" };
@@ -41,7 +41,7 @@ function makeReq(body?: unknown, params?: { id: string }) {
 describe("POST /api/orders", () => {
   describe("Happy path", () => {
     it("comprador autenticado cria pedido e retorna 201", async () => {
-      mockAuth.mockResolvedValue({ user: BUYER });
+      mockGetServerSession.mockResolvedValue({ user: BUYER });
       mockDb.event.findUnique.mockResolvedValue(PUBLISHED_EVENT as any);
       mockDb.ticketTier.findMany.mockResolvedValue([AVAILABLE_TIER] as any);
       mockDb.$transaction.mockImplementation(async (fn: any) =>
@@ -67,7 +67,7 @@ describe("POST /api/orders", () => {
 
   describe("Segurança — autenticação", () => {
     it("401 sem autenticação", async () => {
-      mockAuth.mockResolvedValue(null);
+      mockGetServerSession.mockResolvedValue(null);
       const res = await createOrder(makeReq({ eventId: "event-1", items: [] }));
       expect(res.status).toBe(401);
     });
@@ -75,7 +75,7 @@ describe("POST /api/orders", () => {
 
   describe("Segurança — regras de negócio", () => {
     it("400 ao tentar comprar ingresso de evento cancelado", async () => {
-      mockAuth.mockResolvedValue({ user: BUYER });
+      mockGetServerSession.mockResolvedValue({ user: BUYER });
       mockDb.event.findUnique.mockResolvedValue({ ...PUBLISHED_EVENT, status: "CANCELLED" } as any);
 
       const res = await createOrder(makeReq({
@@ -86,7 +86,7 @@ describe("POST /api/orders", () => {
     });
 
     it("400 ao tentar comprar ingresso de evento já encerrado", async () => {
-      mockAuth.mockResolvedValue({ user: BUYER });
+      mockGetServerSession.mockResolvedValue({ user: BUYER });
       mockDb.event.findUnique.mockResolvedValue({
         ...PUBLISHED_EVENT,
         startsAt: new Date("2020-01-01"),
@@ -101,7 +101,7 @@ describe("POST /api/orders", () => {
     });
 
     it("400 quando lote esgotado (soldQty === totalQty)", async () => {
-      mockAuth.mockResolvedValue({ user: BUYER });
+      mockGetServerSession.mockResolvedValue({ user: BUYER });
       mockDb.event.findUnique.mockResolvedValue(PUBLISHED_EVENT as any);
       mockDb.ticketTier.findMany.mockResolvedValue([{
         ...AVAILABLE_TIER,
@@ -117,7 +117,7 @@ describe("POST /api/orders", () => {
     });
 
     it("400 quando quantity solicitada excede stock disponível", async () => {
-      mockAuth.mockResolvedValue({ user: BUYER });
+      mockGetServerSession.mockResolvedValue({ user: BUYER });
       mockDb.event.findUnique.mockResolvedValue(PUBLISHED_EVENT as any);
       mockDb.ticketTier.findMany.mockResolvedValue([{
         ...AVAILABLE_TIER,
@@ -133,7 +133,7 @@ describe("POST /api/orders", () => {
     });
 
     it("400 com quantity zero ou negativa", async () => {
-      mockAuth.mockResolvedValue({ user: BUYER });
+      mockGetServerSession.mockResolvedValue({ user: BUYER });
 
       const resZero = await createOrder(makeReq({
         eventId: "event-1",
@@ -149,7 +149,7 @@ describe("POST /api/orders", () => {
     });
 
     it("400 para tierId de outro evento (previne manipulação de ID)", async () => {
-      mockAuth.mockResolvedValue({ user: BUYER });
+      mockGetServerSession.mockResolvedValue({ user: BUYER });
       mockDb.event.findUnique.mockResolvedValue(PUBLISHED_EVENT as any);
       mockDb.ticketTier.findMany.mockResolvedValue([{
         ...AVAILABLE_TIER,
@@ -166,7 +166,7 @@ describe("POST /api/orders", () => {
 
   describe("Segurança — race condition (overselling)", () => {
     it("usa $transaction com SELECT FOR UPDATE para prevenir overselling", async () => {
-      mockAuth.mockResolvedValue({ user: BUYER });
+      mockGetServerSession.mockResolvedValue({ user: BUYER });
       mockDb.event.findUnique.mockResolvedValue(PUBLISHED_EVENT as any);
       // Tier parece disponível fora da transaction...
       mockDb.ticketTier.findMany.mockResolvedValue([AVAILABLE_TIER] as any);
@@ -201,7 +201,7 @@ describe("POST /api/orders", () => {
 
 describe("GET /api/orders/[id]", () => {
   it("200 — comprador acessa seu próprio pedido", async () => {
-    mockAuth.mockResolvedValue({ user: BUYER });
+    mockGetServerSession.mockResolvedValue({ user: BUYER });
     mockDb.order.findUnique.mockResolvedValue({
       id: "order-1",
       buyerId: "buyer-1", // dono
@@ -213,13 +213,13 @@ describe("GET /api/orders/[id]", () => {
   });
 
   it("401 sem autenticação", async () => {
-    mockAuth.mockResolvedValue(null);
+    mockGetServerSession.mockResolvedValue(null);
     const res = await getOrder(makeReq(undefined, { id: "order-1" }), { params: { id: "order-1" } });
     expect(res.status).toBe(401);
   });
 
   it("403 IDOR — comprador tentando ver pedido de outro comprador", async () => {
-    mockAuth.mockResolvedValue({ user: OTHER_BUYER }); // buyer-2
+    mockGetServerSession.mockResolvedValue({ user: OTHER_BUYER }); // buyer-2
     mockDb.order.findUnique.mockResolvedValue({
       id: "order-1",
       buyerId: "buyer-1", // dono é buyer-1

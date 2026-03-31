@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 import { POST as initiateMpesa } from "@/app/api/payments/mpesa/route";
 import { POST as initiateEmola } from "@/app/api/payments/emola/route";
 import { GET as pollPayment } from "@/app/api/payments/poll/[paymentId]/route";
@@ -13,7 +13,7 @@ jest.mock("@/lib/payments/e2payments", () => ({
 }));
 
 const mockDb = db as jest.Mocked<typeof db>;
-const mockAuth = auth as jest.Mock;
+const mockGetServerSession = getServerSession as jest.Mock;
 const mockE2P = e2payments as jest.Mocked<typeof e2payments>;
 
 const BUYER = { id: "buyer-1", role: "BUYER" };
@@ -44,7 +44,7 @@ function makePollReq(paymentId: string) {
 describe("POST /api/payments/mpesa", () => {
   describe("Happy path", () => {
     it("201 — cria payment com idempotencyKey único", async () => {
-      mockAuth.mockResolvedValue({ user: BUYER });
+      mockGetServerSession.mockResolvedValue({ user: BUYER });
       mockDb.order.findUnique.mockResolvedValue(PENDING_ORDER as any);
       mockDb.payment.findUnique.mockResolvedValue(null);
       mockE2P.initiateMpesaPayment.mockResolvedValue({ success: true, providerRef: "E2P-REF-123" });
@@ -62,7 +62,7 @@ describe("POST /api/payments/mpesa", () => {
 
   describe("Segurança — autenticação", () => {
     it("401 sem autenticação", async () => {
-      mockAuth.mockResolvedValue(null);
+      mockGetServerSession.mockResolvedValue(null);
       const res = await initiateMpesa(makePaymentReq({ orderId: "order-1" }));
       expect(res.status).toBe(401);
     });
@@ -70,7 +70,7 @@ describe("POST /api/payments/mpesa", () => {
 
   describe("Segurança — autorização (IDOR)", () => {
     it("403 ao tentar pagar pedido de outro comprador", async () => {
-      mockAuth.mockResolvedValue({ user: { id: "buyer-99", role: "BUYER" } });
+      mockGetServerSession.mockResolvedValue({ user: { id: "buyer-99", role: "BUYER" } });
       mockDb.order.findUnique.mockResolvedValue({
         ...PENDING_ORDER,
         buyerId: "buyer-1",
@@ -87,7 +87,7 @@ describe("POST /api/payments/mpesa", () => {
 
   describe("Segurança — idempotência", () => {
     it("409 ao reutilizar idempotencyKey já processada", async () => {
-      mockAuth.mockResolvedValue({ user: BUYER });
+      mockGetServerSession.mockResolvedValue({ user: BUYER });
       mockDb.order.findUnique.mockResolvedValue(PENDING_ORDER as any);
       mockDb.payment.findUnique.mockResolvedValue({ id: "pay-existente" } as any);
 
@@ -100,7 +100,7 @@ describe("POST /api/payments/mpesa", () => {
     });
 
     it("400 sem idempotencyKey no body", async () => {
-      mockAuth.mockResolvedValue({ user: BUYER });
+      mockGetServerSession.mockResolvedValue({ user: BUYER });
       const res = await initiateMpesa(makePaymentReq({
         orderId: "order-1",
         phone: "841234567",
@@ -111,7 +111,7 @@ describe("POST /api/payments/mpesa", () => {
 
   describe("Segurança — regras de negócio", () => {
     it("400 ao tentar pagar pedido já pago", async () => {
-      mockAuth.mockResolvedValue({ user: BUYER });
+      mockGetServerSession.mockResolvedValue({ user: BUYER });
       mockDb.order.findUnique.mockResolvedValue({ ...PENDING_ORDER, status: "PAID" } as any);
 
       const res = await initiateMpesa(makePaymentReq({
@@ -123,7 +123,7 @@ describe("POST /api/payments/mpesa", () => {
     });
 
     it("400 com número de telemóvel inválido para M-Pesa", async () => {
-      mockAuth.mockResolvedValue({ user: BUYER });
+      mockGetServerSession.mockResolvedValue({ user: BUYER });
       mockDb.order.findUnique.mockResolvedValue(PENDING_ORDER as any);
 
       const res = await initiateMpesa(makePaymentReq({
@@ -135,7 +135,7 @@ describe("POST /api/payments/mpesa", () => {
     });
 
     it("400 com phone contendo script injection", async () => {
-      mockAuth.mockResolvedValue({ user: BUYER });
+      mockGetServerSession.mockResolvedValue({ user: BUYER });
       const res = await initiateMpesa(makePaymentReq({
         orderId: "order-1",
         phone: "<script>alert(1)</script>",
@@ -158,7 +158,7 @@ describe("GET /api/payments/poll/[paymentId]", () => {
   };
 
   it("200 PENDING — e2Payments ainda não confirmou", async () => {
-    mockAuth.mockResolvedValue({ user: BUYER });
+    mockGetServerSession.mockResolvedValue({ user: BUYER });
     mockDb.payment.findUnique.mockResolvedValue(PENDING_PAYMENT as any);
     mockE2P.getMpesaPayments.mockResolvedValue([]);
 
@@ -169,7 +169,7 @@ describe("GET /api/payments/poll/[paymentId]", () => {
   });
 
   it("200 COMPLETED — e2Payments confirmou, actualiza DB", async () => {
-    mockAuth.mockResolvedValue({ user: BUYER });
+    mockGetServerSession.mockResolvedValue({ user: BUYER });
     mockDb.payment.findUnique.mockResolvedValue(PENDING_PAYMENT as any);
     mockE2P.getMpesaPayments.mockResolvedValue([
       { reference: "idem-key-123", status: "COMPLETED" },
@@ -188,7 +188,7 @@ describe("GET /api/payments/poll/[paymentId]", () => {
   });
 
   it("200 COMPLETED directo — já confirmado na DB, não chama e2Payments", async () => {
-    mockAuth.mockResolvedValue({ user: BUYER });
+    mockGetServerSession.mockResolvedValue({ user: BUYER });
     mockDb.payment.findUnique.mockResolvedValue({
       ...PENDING_PAYMENT,
       status: "COMPLETED",
@@ -202,13 +202,13 @@ describe("GET /api/payments/poll/[paymentId]", () => {
   });
 
   it("401 sem autenticação", async () => {
-    mockAuth.mockResolvedValue(null);
+    mockGetServerSession.mockResolvedValue(null);
     const res = await pollPayment(makePollReq("pay-1"), { params: { paymentId: "pay-1" } });
     expect(res.status).toBe(401);
   });
 
   it("403 IDOR — comprador consultando pagamento de outro", async () => {
-    mockAuth.mockResolvedValue({ user: { id: "buyer-99", role: "BUYER" } });
+    mockGetServerSession.mockResolvedValue({ user: { id: "buyer-99", role: "BUYER" } });
     mockDb.payment.findUnique.mockResolvedValue(PENDING_PAYMENT as any);
 
     const res = await pollPayment(makePollReq("pay-1"), { params: { paymentId: "pay-1" } });

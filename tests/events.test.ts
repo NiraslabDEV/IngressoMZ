@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 import {
   GET as listEvents,
   POST as createEvent,
@@ -12,7 +12,7 @@ import {
 import { NextRequest } from "next/server";
 
 const mockDb = db as jest.Mocked<typeof db>;
-const mockAuth = auth as jest.Mock;
+const mockGetServerSession = getServerSession as jest.Mock;
 
 const ORGANIZER = { id: "org-1", role: "ORGANIZER", name: "Org" };
 const OTHER_ORGANIZER = { id: "org-2", role: "ORGANIZER", name: "Outro" };
@@ -46,7 +46,7 @@ const validEventBody = {
 
 describe("GET /api/events", () => {
   it("retorna lista pública de eventos publicados sem autenticação", async () => {
-    mockAuth.mockResolvedValue(null);
+    mockGetServerSession.mockResolvedValue(null);
     mockDb.event.findMany.mockResolvedValue([]);
 
     const res = await listEvents(makeReq("GET"));
@@ -59,7 +59,7 @@ describe("GET /api/events", () => {
 describe("POST /api/events", () => {
   describe("Happy path", () => {
     it("organizer autenticado cria evento e retorna 201", async () => {
-      mockAuth.mockResolvedValue({ user: ORGANIZER });
+      mockGetServerSession.mockResolvedValue({ user: ORGANIZER });
       mockDb.event.create.mockResolvedValue({ id: "event-1", ...validEventBody } as any);
 
       const res = await createEvent(makeReq("POST", validEventBody));
@@ -69,13 +69,13 @@ describe("POST /api/events", () => {
 
   describe("Segurança — autenticação e autorização", () => {
     it("401 sem autenticação", async () => {
-      mockAuth.mockResolvedValue(null);
+      mockGetServerSession.mockResolvedValue(null);
       const res = await createEvent(makeReq("POST", validEventBody));
       expect(res.status).toBe(401);
     });
 
     it("403 quando role é BUYER (não organizador)", async () => {
-      mockAuth.mockResolvedValue({ user: BUYER });
+      mockGetServerSession.mockResolvedValue({ user: BUYER });
       const res = await createEvent(makeReq("POST", validEventBody));
       expect(res.status).toBe(403);
     });
@@ -83,7 +83,7 @@ describe("POST /api/events", () => {
 
   describe("Segurança — inputs", () => {
     it("400 com XSS no título: <script>alert(1)</script>", async () => {
-      mockAuth.mockResolvedValue({ user: ORGANIZER });
+      mockGetServerSession.mockResolvedValue({ user: ORGANIZER });
       const res = await createEvent(makeReq("POST", {
         ...validEventBody,
         title: "<script>alert(1)</script>",
@@ -92,7 +92,7 @@ describe("POST /api/events", () => {
     });
 
     it("400 com título acima de 120 caracteres", async () => {
-      mockAuth.mockResolvedValue({ user: ORGANIZER });
+      mockGetServerSession.mockResolvedValue({ user: ORGANIZER });
       const res = await createEvent(makeReq("POST", {
         ...validEventBody,
         title: "A".repeat(121),
@@ -101,7 +101,7 @@ describe("POST /api/events", () => {
     });
 
     it("400 com descrição acima de 2000 caracteres", async () => {
-      mockAuth.mockResolvedValue({ user: ORGANIZER });
+      mockGetServerSession.mockResolvedValue({ user: ORGANIZER });
       const res = await createEvent(makeReq("POST", {
         ...validEventBody,
         description: "A".repeat(2001),
@@ -110,7 +110,7 @@ describe("POST /api/events", () => {
     });
 
     it("400 com descrição XSS: <img src=x onerror=alert(1)>", async () => {
-      mockAuth.mockResolvedValue({ user: ORGANIZER });
+      mockGetServerSession.mockResolvedValue({ user: ORGANIZER });
       const res = await createEvent(makeReq("POST", {
         ...validEventBody,
         description: '<img src=x onerror=alert(1)>',
@@ -119,7 +119,7 @@ describe("POST /api/events", () => {
     });
 
     it("400 com preço de ingresso negativo", async () => {
-      mockAuth.mockResolvedValue({ user: ORGANIZER });
+      mockGetServerSession.mockResolvedValue({ user: ORGANIZER });
       const res = await createEvent(makeReq("POST", {
         ...validEventBody,
         tiers: [{ name: "Normal", price: -100, totalQty: 100 }],
@@ -128,7 +128,7 @@ describe("POST /api/events", () => {
     });
 
     it("400 com data no passado", async () => {
-      mockAuth.mockResolvedValue({ user: ORGANIZER });
+      mockGetServerSession.mockResolvedValue({ user: ORGANIZER });
       const res = await createEvent(makeReq("POST", {
         ...validEventBody,
         startsAt: "2020-01-01T00:00:00Z",
@@ -145,7 +145,7 @@ describe("PUT /api/events/[id]", () => {
 
   describe("Happy path", () => {
     it("organizador dono do evento consegue editar", async () => {
-      mockAuth.mockResolvedValue({ user: ORGANIZER });
+      mockGetServerSession.mockResolvedValue({ user: ORGANIZER });
       mockDb.event.findUnique.mockResolvedValue({ id: "event-1", organizerId: "org-1" } as any);
       mockDb.event.update.mockResolvedValue({ id: "event-1" } as any);
 
@@ -156,13 +156,13 @@ describe("PUT /api/events/[id]", () => {
 
   describe("Segurança", () => {
     it("401 sem autenticação", async () => {
-      mockAuth.mockResolvedValue(null);
+      mockGetServerSession.mockResolvedValue(null);
       const res = await updateEvent(makeReq("PUT", { title: "X" }), params);
       expect(res.status).toBe(401);
     });
 
     it("403 IDOR — organizador tentando editar evento de outro organizador", async () => {
-      mockAuth.mockResolvedValue({ user: OTHER_ORGANIZER }); // org-2
+      mockGetServerSession.mockResolvedValue({ user: OTHER_ORGANIZER }); // org-2
       mockDb.event.findUnique.mockResolvedValue({ id: "event-1", organizerId: "org-1" } as any); // dono é org-1
 
       const res = await updateEvent(makeReq("PUT", { title: "Hack" }), params);
@@ -170,13 +170,13 @@ describe("PUT /api/events/[id]", () => {
     });
 
     it("403 — BUYER tentando editar qualquer evento", async () => {
-      mockAuth.mockResolvedValue({ user: BUYER });
+      mockGetServerSession.mockResolvedValue({ user: BUYER });
       const res = await updateEvent(makeReq("PUT", { title: "Hack" }), params);
       expect(res.status).toBe(403);
     });
 
     it("404 para evento inexistente (não expõe 403 vs 404 para não vazar existência)", async () => {
-      mockAuth.mockResolvedValue({ user: ORGANIZER });
+      mockGetServerSession.mockResolvedValue({ user: ORGANIZER });
       mockDb.event.findUnique.mockResolvedValue(null);
 
       const res = await updateEvent(makeReq("PUT", { title: "X" }), params);
@@ -191,13 +191,13 @@ describe("DELETE /api/events/[id]", () => {
   const params = { params: { id: "event-1" } };
 
   it("401 sem autenticação", async () => {
-    mockAuth.mockResolvedValue(null);
+    mockGetServerSession.mockResolvedValue(null);
     const res = await deleteEvent(makeReq("DELETE"), params);
     expect(res.status).toBe(401);
   });
 
   it("403 IDOR — deletar evento alheio", async () => {
-    mockAuth.mockResolvedValue({ user: OTHER_ORGANIZER });
+    mockGetServerSession.mockResolvedValue({ user: OTHER_ORGANIZER });
     mockDb.event.findUnique.mockResolvedValue({ id: "event-1", organizerId: "org-1" } as any);
 
     const res = await deleteEvent(makeReq("DELETE"), params);
@@ -205,7 +205,7 @@ describe("DELETE /api/events/[id]", () => {
   });
 
   it("400 — não permite deletar evento com ingressos vendidos", async () => {
-    mockAuth.mockResolvedValue({ user: ORGANIZER });
+    mockGetServerSession.mockResolvedValue({ user: ORGANIZER });
     mockDb.event.findUnique.mockResolvedValue({
       id: "event-1",
       organizerId: "org-1",
