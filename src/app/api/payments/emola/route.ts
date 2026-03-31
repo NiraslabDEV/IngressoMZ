@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Pedido não encontrado." }, { status: 404 });
   }
 
-  if (order.buyerId !== session.user.id) {
+  if (order.buyerId !== session!.user!.id) {
     return NextResponse.json({ error: "Proibido." }, { status: 403 });
   }
 

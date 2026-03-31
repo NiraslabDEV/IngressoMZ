@@ -22,7 +22,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
   }
 
   // Ownership — comprador só consulta os seus pagamentos
-  if (payment.order.buyerId !== session.user.id) {
+  if (payment.order.buyerId !== session!.user!.id) {
     return NextResponse.json({ error: "Proibido." }, { status: 403 });
   }
 

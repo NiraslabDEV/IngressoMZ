@@ -27,7 +27,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
   }
 
   // Ownership: organizador só consulta ingressos dos seus eventos
-  if (ticket.order.event.organizerId !== session.user.id) {
+  if (ticket.order.event.organizerId !== session!.user!.id) {
     return NextResponse.json({ error: "Proibido." }, { status: 403 });
   }
 

@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { eventId, items } = parsed.data;
-  const buyerId = session.user.id!;
+  const buyerId = session!.user!.id!;
 
   // Validar evento
   const event = await db.event.findUnique({ where: { id: eventId } });

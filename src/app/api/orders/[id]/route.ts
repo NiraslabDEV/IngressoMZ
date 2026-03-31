@@ -20,7 +20,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
   }
 
   // Ownership check — comprador só acessa os seus próprios pedidos
-  if (order.buyerId !== session.user.id) {
+  if (order.buyerId !== session!.user!.id) {
     return NextResponse.json({ error: "Proibido." }, { status: 403 });
   }
 

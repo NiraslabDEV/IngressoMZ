@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Ownership check — comprador só paga os seus pedidos
-  if (order.buyerId !== session.user.id) {
+  if (order.buyerId !== session!.user!.id) {
     return NextResponse.json({ error: "Proibido." }, { status: 403 });
   }
 
