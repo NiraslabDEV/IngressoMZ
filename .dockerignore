@@ -1,0 +1,15 @@
+.git
+.github
+node_modules
+.next
+.env
+.env.local
+.env.*.local
+npm-debug.log*
+README.md
+CLAUDE.md
+tests/
+*.test.ts
+jest.config.ts
+jest.setup.ts
+docker-compose.yml
