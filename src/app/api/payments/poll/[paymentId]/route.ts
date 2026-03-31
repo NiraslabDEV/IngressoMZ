@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import type { AuthedSession } from "@/lib/api";
 import { getMpesaPayments } from "@/lib/payments/e2payments";
 
 type RouteParams = { params: { paymentId: string } };
 
 // e2Payments não tem webhooks — o frontend chama este endpoint até status != PENDING
 export async function GET(_req: NextRequest, { params }: RouteParams) {
-  const session = await auth();
+  const session = await auth() as AuthedSession | null;
   if (!session?.user) {
     return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
   }
@@ -22,7 +23,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
   }
 
   // Ownership — comprador só consulta os seus pagamentos
-  if (payment.order.buyerId !== session!.user!.id) {
+  if (payment.order.buyerId !== session!.user.id) {
     return NextResponse.json({ error: "Proibido." }, { status: 403 });
   }
 

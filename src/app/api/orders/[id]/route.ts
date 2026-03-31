@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import type { AuthedSession } from "@/lib/api";
 
 type RouteParams = { params: { id: string } };
 
 export async function GET(_req: NextRequest, { params }: RouteParams) {
-  const session = await auth();
+  const session = await auth() as AuthedSession | null;
   if (!session?.user) {
     return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
   }
@@ -20,7 +21,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
   }
 
   // Ownership check — comprador só acessa os seus próprios pedidos
-  if (order.buyerId !== session!.user!.id) {
+  if (order.buyerId !== session!.user.id) {
     return NextResponse.json({ error: "Proibido." }, { status: 403 });
   }
 

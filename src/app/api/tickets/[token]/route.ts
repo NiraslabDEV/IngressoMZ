@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { requireRole } from "@/lib/api";
+import { requireRole, type AuthedSession } from "@/lib/api";
 
 type RouteParams = { params: { token: string } };
 
 export async function GET(_req: NextRequest, { params }: RouteParams) {
-  const session = await auth();
+  const session = await auth() as AuthedSession | null;
   const authError = requireRole(session, "ORGANIZER");
   if (authError) return authError;
 
@@ -27,7 +27,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
   }
 
   // Ownership: organizador só consulta ingressos dos seus eventos
-  if (ticket.order.event.organizerId !== session!.user!.id) {
+  if (ticket.order.event.organizerId !== session!.user.id) {
     return NextResponse.json({ error: "Proibido." }, { status: 403 });
   }
 

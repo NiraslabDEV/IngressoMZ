@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { requireRole, HTML_TAG_RE } from "@/lib/api";
+import { requireRole, HTML_TAG_RE, type AuthedSession } from "@/lib/api";
 
 const updateEventSchema = z.object({
   title: z
@@ -37,7 +37,7 @@ type RouteParams = { params: { id: string } };
 // ─── GET /api/events/[id] ─────────────────────────────────────────────────────
 
 export async function GET(req: NextRequest, { params }: RouteParams) {
-  const session = await auth();
+  const session = await auth() as AuthedSession | null;
   const role = (session?.user as { role?: string } | undefined)?.role;
 
   const event = await db.event.findUnique({
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
   // Rascunhos só visíveis para o próprio organizador
   if (event.status === "DRAFT") {
-    if (role !== "ORGANIZER" || event.organizerId !== session!.user!.id) {
+    if (role !== "ORGANIZER" || event.organizerId !== session!.user.id) {
       return NextResponse.json({ error: "Não encontrado." }, { status: 404 });
     }
   }
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 // ─── PUT /api/events/[id] ─────────────────────────────────────────────────────
 
 export async function PUT(req: NextRequest, { params }: RouteParams) {
-  const session = await auth();
+  const session = await auth() as AuthedSession | null;
   const authError = requireRole(session, "ORGANIZER");
   if (authError) return authError;
 
@@ -71,7 +71,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: "Não encontrado." }, { status: 404 });
   }
   // Ownership check — organizador só edita os seus eventos
-  if (event.organizerId !== session!.user!.id) {
+  if (event.organizerId !== session!.user.id) {
     return NextResponse.json({ error: "Proibido." }, { status: 403 });
   }
 
@@ -98,7 +98,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 // ─── DELETE /api/events/[id] ──────────────────────────────────────────────────
 
 export async function DELETE(_req: NextRequest, { params }: RouteParams) {
-  const session = await auth();
+  const session = await auth() as AuthedSession | null;
   const authError = requireRole(session, "ORGANIZER");
   if (authError) return authError;
 
@@ -110,7 +110,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: "Não encontrado." }, { status: 404 });
   }
   // Ownership check
-  if (event.organizerId !== session!.user!.id) {
+  if (event.organizerId !== session!.user.id) {
     return NextResponse.json({ error: "Proibido." }, { status: 403 });
   }
 

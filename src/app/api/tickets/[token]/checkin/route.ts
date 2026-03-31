@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { requireRole } from "@/lib/api";
+import { requireRole, type AuthedSession } from "@/lib/api";
 
 type RouteParams = { params: { token: string } };
 
 const CHECKIN_WINDOW_MINUTES_BEFORE = 30;
 
 export async function POST(_req: NextRequest, { params }: RouteParams) {
-  const session = await auth();
+  const session = await auth() as AuthedSession | null;
   const authError = requireRole(session, "ORGANIZER");
   if (authError) return authError;
 
@@ -29,7 +29,7 @@ export async function POST(_req: NextRequest, { params }: RouteParams) {
   }
 
   // Ownership check
-  if (ticket.order.event.organizerId !== session!.user!.id) {
+  if (ticket.order.event.organizerId !== session!.user.id) {
     return NextResponse.json({ error: "Proibido." }, { status: 403 });
   }
 
@@ -72,7 +72,7 @@ export async function POST(_req: NextRequest, { params }: RouteParams) {
         data: {
           status: "USED",
           checkedInAt: new Date(),
-          checkedInBy: session.user!.id,
+          checkedInBy: session!.user.id,
         },
       });
     });

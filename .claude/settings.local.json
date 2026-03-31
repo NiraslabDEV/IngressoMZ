@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls c:/Users/Gabriel/Desktop/IngressoMZ/*.config.* c:/Users/Gabriel/Desktop/IngressoMZ/tailwind* c:/Users/Gabriel/Desktop/IngressoMZ/postcss*)",
+      "Bash(for file:*)",
+      "Bash(do echo:*)",
+      "Read(//c/Users/Gabriel/Desktop/IngressoMZ/**)",
+      "Bash(do)",
+      "Bash(sed -i 's|import { db } from \"\"@/lib/db\"\";|import { db } from \"\"@/lib/db\"\";\\\\nimport type { AuthedSession } from \"\"@/lib/api\"\";|' \"$file\")",
+      "Bash(echo \"fixed: $file\")",
+      "Bash(done)",
+      "Bash(npm run:*)"
+    ]
+  }
+}

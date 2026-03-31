@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import type { AuthedSession } from "@/lib/api";
 import { initiateMpesaPayment } from "@/lib/payments/e2payments";
 
 // Vodacom 84/85/86, Movitel 82/83, Tmcel 87 — 9 dígitos sem código de país
@@ -14,7 +15,7 @@ const mpesaSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
+  const session = await auth() as AuthedSession | null;
   if (!session?.user) {
     return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
   }
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Ownership check — comprador só paga os seus pedidos
-  if (order.buyerId !== session!.user!.id) {
+  if (order.buyerId !== session!.user.id) {
     return NextResponse.json({ error: "Proibido." }, { status: 403 });
   }
 

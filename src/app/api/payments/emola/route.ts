@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import type { AuthedSession } from "@/lib/api";
 import { initiateEmolaPayment } from "@/lib/payments/emola";
 
 const MZ_PHONE_RE = /^8[2-7]\d{7}$/;
@@ -13,7 +14,7 @@ const emolaSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
+  const session = await auth() as AuthedSession | null;
   if (!session?.user) {
     return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
   }
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Pedido não encontrado." }, { status: 404 });
   }
 
-  if (order.buyerId !== session!.user!.id) {
+  if (order.buyerId !== session!.user.id) {
     return NextResponse.json({ error: "Proibido." }, { status: 403 });
   }
 

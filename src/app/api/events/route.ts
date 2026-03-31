@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { requireRole, HTML_TAG_RE } from "@/lib/api";
+import { requireRole, HTML_TAG_RE, type AuthedSession } from "@/lib/api";
 
 const tierSchema = z.object({
   name: z.string().min(1).max(80),
@@ -53,7 +53,7 @@ export async function GET(_req: NextRequest) {
 // ─── POST /api/events — criar evento ─────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
+  const session = await auth() as AuthedSession | null;
   const authError = requireRole(session, "ORGANIZER");
   if (authError) return authError;
 
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
   const event = await db.event.create({
     data: {
       ...eventData,
-      organizerId: session!.user!.id!,
+      organizerId: session!.user.id,
       tiers: { create: tiers },
     },
     include: { tiers: true },

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import type { AuthedSession } from "@/lib/api";
 import { randomBytes } from "crypto";
 
 const createOrderSchema = z.object({
@@ -17,7 +18,7 @@ const createOrderSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
+  const session = await auth() as AuthedSession | null;
   if (!session?.user) {
     return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
   }
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { eventId, items } = parsed.data;
-  const buyerId = session!.user!.id!;
+  const buyerId = session!.user.id;
 
   // Validar evento
   const event = await db.event.findUnique({ where: { id: eventId } });
