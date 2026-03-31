@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
         snapshots.push({ tier, quantity: item.quantity });
       }
 
-      const platformFeePercent = Number((event as { platformFeePercent?: number }).platformFeePercent ?? 7.5);
+      const platformFeePercent = Number((event as unknown as { platformFeePercent?: unknown }).platformFeePercent ?? 7.5);
       const platformFee = totalAmount * (platformFeePercent / 100);
 
       const createdOrder = await tx.order.create({
