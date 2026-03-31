@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import type { AuthedSession } from "@/lib/api";
 
 type RouteParams = { params: { id: string } };
 
 export async function GET(_req: NextRequest, { params }: RouteParams) {
-  const session = await auth() as AuthedSession | null;
+  const session = await getServerSession(authOptions);
   if (!session?.user) {
     return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
   }

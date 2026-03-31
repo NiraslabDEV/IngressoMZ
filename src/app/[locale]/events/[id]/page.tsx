@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
-import { auth } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import BuyTickets from "./BuyTickets";
@@ -13,7 +14,7 @@ export default async function EventPage({
 }: {
   params: { locale: string; id: string };
 }) {
-  const session = await auth();
+  const session = await getServerSession(authOptions);
 
   const event = await db.event.findUnique({
     where: { id: params.id, status: "PUBLISHED" },

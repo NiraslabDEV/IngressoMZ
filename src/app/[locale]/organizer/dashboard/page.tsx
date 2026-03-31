@@ -1,4 +1,5 @@
-import { auth } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import Link from "next/link";
 
@@ -27,7 +28,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default async function DashboardPage({ params }: { params: { locale: string } }) {
-  const session = await auth();
+  const session = await getServerSession(authOptions);
 
   const events = await db.event.findMany({
     where: { organizerId: session!.user!.id! },

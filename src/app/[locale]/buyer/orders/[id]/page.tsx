@@ -1,4 +1,5 @@
-import { auth } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
@@ -13,7 +14,7 @@ export default async function OrderPage({
 }: {
   params: { locale: string; id: string };
 }) {
-  const session = await auth();
+  const session = await getServerSession(authOptions);
   if (!session?.user) redirect(`/${params.locale}/auth/login`);
 
   const order = await db.order.findUnique({

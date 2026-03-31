@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
-import { auth } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import Link from "next/link";
 import "../globals.css";
 
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
 const locales = ["pt", "en"];
 
 async function Navbar({ locale }: { locale: string }) {
-  const session = await auth();
+  const session = await getServerSession(authOptions);
   const role = (session?.user as { role?: string } | undefined)?.role;
 
   return (

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { requireRole, HTML_TAG_RE, type AuthedSession } from "@/lib/api";
 
@@ -53,7 +54,7 @@ export async function GET(_req: NextRequest) {
 // ─── POST /api/events — criar evento ─────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
-  const session = await auth() as AuthedSession | null;
+  const session = await getServerSession(authOptions);
   const authError = requireRole(session, "ORGANIZER");
   if (authError) return authError;
 

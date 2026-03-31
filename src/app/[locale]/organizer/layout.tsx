@@ -1,4 +1,5 @@
-import { auth } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { SignOutButton } from "@/components/organizer/SignOutButton";
@@ -10,7 +11,7 @@ export default async function OrganizerLayout({
   children: React.ReactNode;
   params: { locale: string };
 }) {
-  const session = await auth();
+  const session = await getServerSession(authOptions);
   const role = (session?.user as { role?: string } | undefined)?.role;
 
   if (!session?.user || role !== "ORGANIZER") {

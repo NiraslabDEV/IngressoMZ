@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { requireRole, type AuthedSession } from "@/lib/api";
 
@@ -8,7 +9,7 @@ type RouteParams = { params: { token: string } };
 const CHECKIN_WINDOW_MINUTES_BEFORE = 30;
 
 export async function POST(_req: NextRequest, { params }: RouteParams) {
-  const session = await auth() as AuthedSession | null;
+  const session = await getServerSession(authOptions);
   const authError = requireRole(session, "ORGANIZER");
   if (authError) return authError;
 

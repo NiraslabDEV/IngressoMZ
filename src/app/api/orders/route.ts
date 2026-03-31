@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { auth } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import type { AuthedSession } from "@/lib/api";
 import { randomBytes } from "crypto";
@@ -18,7 +19,7 @@ const createOrderSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const session = await auth() as AuthedSession | null;
+  const session = await getServerSession(authOptions);
   if (!session?.user) {
     return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
   }
