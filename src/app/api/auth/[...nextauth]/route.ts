@@ -1,10 +1,8 @@
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
+import NextAuth from "next-auth";
+import { authOptions } from "@/lib/auth";
 
-async function handler(req: Request) {
-  const { default: NextAuth } = await import("next-auth");
-  const { authOptions } = await import("@/lib/auth");
-  return NextAuth(authOptions)(req as any, undefined as any);
-}
+export const dynamic = "force-dynamic";
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
