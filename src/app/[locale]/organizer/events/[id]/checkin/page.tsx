@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { BarcodeDetector } from "barcode-detector/pure";
+import jsQR from "jsqr";
 
 interface CheckInResult {
   success: boolean;
@@ -21,13 +21,15 @@ export default function CheckInPage() {
   const [loading, setLoading] = useState(false);
   const [useCameraScanner, setUseCameraScanner] = useState(false);
   const [cameraSupported, setCameraSupported] = useState(true);
+  const [cameraError, setCameraError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const scannerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const detectedRef = useRef<Set<string>>(new Set());
 
-  // Focar no input automaticamente (leitores de QR enviam como teclado)
+  // Focar no input automaticamente
   useEffect(() => {
     if (!useCameraScanner) {
       inputRef.current?.focus();
@@ -75,7 +77,6 @@ export default function CheckInPage() {
     handleCheckin(token);
   }
 
-  // Input oculto para leitores de QR (enviam enter automaticamente)
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
       handleCheckin(token);
@@ -85,40 +86,78 @@ export default function CheckInPage() {
   // Iniciar scanner de câmera
   async function startCameraScanner() {
     try {
+      setCameraError(null);
+      detectedRef.current.clear();
+
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: {
+          facingMode: "environment",
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
         audio: false,
       });
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
+        
+        // Garantir que o vídeo começa a tocar
+        await videoRef.current.play();
         setUseCameraScanner(true);
 
         // Iniciar detecção de QR codes
-        const detector = new BarcodeDetector({ formats: ["qr_code"] });
-        scannerIntervalRef.current = setInterval(async () => {
-          if (videoRef.current && canvasRef.current && !loading) {
-            try {
-              const barcodes = await detector.detect(videoRef.current);
-              if (barcodes.length > 0) {
-                const qrToken = barcodes[0].rawValue.trim();
-                setToken(qrToken);
-                await handleCheckin(qrToken);
-              }
-            } catch {
-              // Ignorar erros de detecção
-            }
-          }
-        }, 500);
+        startQRScanning();
       }
-    } catch (error) {
-      setResult({
-        success: false,
-        message: "Erro ao acessar câmera. Verifica as permissões.",
-      });
-      setUseCameraScanner(false);
+    } catch (error: unknown) {
+      const errMsg =
+        error instanceof Error
+          ? error.message
+          : "Erro ao acessar câmera";
+      setCameraError(errMsg);
+      setCameraSupported(false);
     }
+  }
+
+  // Escanear QR codes usando canvas e jsQR
+  function startQRScanning() {
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+
+    if (!canvas || !video) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    scannerIntervalRef.current = setInterval(() => {
+      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+        // Definir tamanho do canvas
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        // Desenhar frame do vídeo no canvas
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Extrair dados de imagem
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+        // Decodificar QR code
+        const qrCode = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: "dontInvert",
+        });
+
+        if (qrCode) {
+          const qrData = qrCode.data.trim();
+
+          // Evitar processar o mesmo código múltiplas vezes
+          if (!detectedRef.current.has(qrData)) {
+            detectedRef.current.add(qrData);
+            setToken(qrData);
+            handleCheckin(qrData);
+          }
+        }
+      }
+    }, 300);
   }
 
   // Parar scanner de câmera
@@ -131,7 +170,12 @@ export default function CheckInPage() {
       clearInterval(scannerIntervalRef.current);
       scannerIntervalRef.current = null;
     }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    detectedRef.current.clear();
     setUseCameraScanner(false);
+    setCameraError(null);
     inputRef.current?.focus();
   }
 
@@ -180,18 +224,31 @@ export default function CheckInPage() {
           </div>
         )}
 
+        {/* Erro de câmera */}
+        {cameraError && (
+          <div className="rounded-2xl p-4 mb-6 bg-red-50 border border-red-200 text-sm text-red-700">
+            <p className="font-medium">Erro da câmera:</p>
+            <p className="text-xs mt-1">{cameraError}</p>
+          </div>
+        )}
+
         {/* Scanner de Câmera */}
         {cameraSupported && (
           <div className="mb-6">
             {useCameraScanner ? (
               <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full aspect-video bg-black"
-                />
-                <canvas ref={canvasRef} className="hidden" />
+                <div className="relative bg-black aspect-video">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                  <canvas ref={canvasRef} className="hidden" />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-48 h-48 border-2 border-orange-400 rounded-lg opacity-75" />
+                  </div>
+                </div>
                 <button
                   type="button"
                   onClick={stopCameraScanner}
@@ -214,14 +271,16 @@ export default function CheckInPage() {
         )}
 
         {/* Divider */}
-        {cameraSupported && <div className="relative mb-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
+        {cameraSupported && (
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-gray-50 text-gray-500">OU</span>
+            </div>
           </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-gray-50 text-gray-500">OU</span>
-          </div>
-        </div>}
+        )}
 
         {/* Input manual */}
         {!useCameraScanner && (
@@ -264,7 +323,7 @@ export default function CheckInPage() {
             {cameraSupported ? (
               <>
                 <li>Clica em &quot;Abrir Scanner&quot; e autoriza o acesso à câmera</li>
-                <li>Aponta o QR code do ingresso para a câmera</li>
+                <li>Aponta o QR code do ingresso para o centro do ecrã</li>
                 <li>A validação é feita automaticamente quando o código é detectado</li>
                 <li>Ou introduce o token manualmente no campo abaixo</li>
               </>
