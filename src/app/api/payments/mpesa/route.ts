@@ -55,11 +55,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Chave de idempotência já utilizada." }, { status: 409 });
   }
 
-  const result = await initiateMpesaPayment({
-    phone,
-    amount: Number(order.totalAmount),
-    reference: idempotencyKey,
-  });
+  let result: Awaited<ReturnType<typeof initiateMpesaPayment>>;
+  try {
+    result = await initiateMpesaPayment({
+      phone,
+      amount: Number(order.totalAmount),
+      reference: idempotencyKey,
+    });
+  } catch (e) {
+    console.error("[mpesa] initiateMpesaPayment threw:", e);
+    return NextResponse.json({ error: "Erro ao contactar gateway de pagamento." }, { status: 502 });
+  }
+
+  if (!result.success) {
+    console.error("[mpesa] initiateMpesaPayment failed:", result.error);
+    return NextResponse.json(
+      { error: `Pagamento recusado pelo gateway: ${result.error ?? "erro desconhecido"}` },
+      { status: 502 }
+    );
+  }
 
   const payment = await db.payment.create({
     data: {
@@ -68,7 +82,7 @@ export async function POST(req: NextRequest) {
       providerRef: result.providerRef ?? null,
       idempotencyKey,
       amount: order.totalAmount,
-      status: result.success ? "PENDING" : "FAILED",
+      status: "PENDING",
     },
   });
 
