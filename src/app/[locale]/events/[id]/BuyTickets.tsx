@@ -91,10 +91,12 @@ export default function BuyTickets({ eventId, tiers, locale, isLoggedIn }: Props
       // 2. Iniciar pagamento
       const payRoute = method === "MPESA" ? "/api/payments/mpesa" : method === "EMOLA" ? "/api/payments/emola" : "/api/payments/stripe";
 
+      const idempotencyKey = `${order.id}-${Date.now()}`;
+
       const payRes = await fetch(payRoute, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId: order.id, phone }),
+        body: JSON.stringify({ orderId: order.id, phone, idempotencyKey }),
       });
 
       if (!payRes.ok) {
