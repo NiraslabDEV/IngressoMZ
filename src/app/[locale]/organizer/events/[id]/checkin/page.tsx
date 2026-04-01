@@ -100,8 +100,11 @@ export default function CheckInPage() {
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.muted = true; // Requisito para autoplay em iOS
+        videoRef.current.playsInline = true; // Requisito para iOS
+        videoRef.current.controls = false;
         streamRef.current = stream;
-        
+
         // Garantir que o vídeo começa a tocar
         await videoRef.current.play();
         setUseCameraScanner(true);
@@ -160,6 +163,26 @@ export default function CheckInPage() {
     }, 300);
   }
 
+  // Decodificar imagem do canvas com jsQR
+  function decodeCurrentFrame() {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return null;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const qrCode = jsQR(imageData.data, imageData.width, imageData.height, {
+      inversionAttempts: "dontInvert",
+    });
+
+    return qrCode?.data?.trim() ?? null;
+  }
+
   // Parar scanner de câmera
   function stopCameraScanner() {
     if (streamRef.current) {
@@ -172,11 +195,48 @@ export default function CheckInPage() {
     }
     if (videoRef.current) {
       videoRef.current.srcObject = null;
+      videoRef.current.muted = false;
     }
     detectedRef.current.clear();
     setUseCameraScanner(false);
     setCameraError(null);
     inputRef.current?.focus();
+  }
+
+  // Fallback: decodificar foto a partir do input file amb capture
+  async function handleFileImage(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const qrCode = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: "dontInvert",
+        });
+        if (qrCode?.data) {
+          setToken(qrCode.data.trim());
+          handleCheckin(qrCode.data.trim());
+        } else {
+          setResult({ success: false, message: "QR code não detectado na imagem." });
+        }
+      };
+      if (typeof reader.result === "string") {
+        img.src = reader.result;
+      }
+    };
+
+    reader.readAsDataURL(file);
   }
 
   return (
@@ -249,13 +309,30 @@ export default function CheckInPage() {
                     <div className="w-48 h-48 border-2 border-orange-400 rounded-lg opacity-75" />
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={stopCameraScanner}
-                  className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 transition-colors"
-                >
-                  Parar Scanner
-                </button>
+                <div className="flex gap-2 p-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const qrData = decodeCurrentFrame();
+                      if (qrData) {
+                        setToken(qrData);
+                        handleCheckin(qrData);
+                      } else {
+                        setResult({ success: false, message: "QR code não detectado neste frame. Ajuste a distância e tente novamente." });
+                      }
+                    }}
+                    className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 rounded-lg transition-colors"
+                  >
+                    Capturar frame
+                  </button>
+                  <button
+                    type="button"
+                    onClick={stopCameraScanner}
+                    className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 rounded-lg transition-colors"
+                  >
+                    Parar Scanner
+                  </button>
+                </div>
               </div>
             ) : (
               <button
