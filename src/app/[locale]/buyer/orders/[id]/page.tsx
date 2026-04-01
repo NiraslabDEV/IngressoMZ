@@ -132,6 +132,7 @@ export default async function OrderPage({
         {qrCodes.map((t) => (
           <div key={t.id} className="bg-white rounded-2xl border border-gray-200 p-5 flex items-center gap-5">
             {t.qr ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img src={t.qr} alt="QR Code" className="w-28 h-28 rounded-xl border border-gray-100" />
             ) : (
               <div className="w-28 h-28 rounded-xl bg-gray-100 flex items-center justify-center text-4xl">

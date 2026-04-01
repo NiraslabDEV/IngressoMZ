@@ -263,7 +263,7 @@ export default function CheckInPage() {
           <ol className="list-decimal list-inside space-y-1 text-orange-700">
             {cameraSupported ? (
               <>
-                <li>Clica em "Abrir Scanner" e autoriza o acesso à câmera</li>
+                <li>Clica em &quot;Abrir Scanner&quot; e autoriza o acesso à câmera</li>
                 <li>Aponta o QR code do ingresso para a câmera</li>
                 <li>A validação é feita automaticamente quando o código é detectado</li>
                 <li>Ou introduce o token manualmente no campo abaixo</li>

@@ -92,6 +92,7 @@ export default async function TicketsPage({ params }: { params: { locale: string
               <div className="p-5 flex items-center gap-5">
                 {/* QR Code */}
                 {ticket.qrDataUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={ticket.qrDataUrl}
                     alt="QR Code do ingresso"
