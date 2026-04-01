@@ -36,8 +36,11 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
   // Ainda PENDING — consulta e2Payments para ver se o utilizador já aprovou
   try {
     const payments = await getMpesaPayments();
+    console.log("[poll] payments from e2p:", JSON.stringify(payments.slice(0, 5)));
+    console.log("[poll] looking for ref:", payment.idempotencyKey);
+    const PAID_STATUSES = ["COMPLETED", "completed", "paid", "PAID", "success", "SUCCESS"];
     const confirmed = payments.find(
-      (p) => p.reference === payment.idempotencyKey && p.status === "COMPLETED"
+      (p) => p.reference === payment.idempotencyKey && PAID_STATUSES.includes(p.status)
     );
 
     if (confirmed) {
