@@ -55,13 +55,17 @@ export default function CheckInPage() {
       if (!res.ok) {
         setResult({ success: false, message: data.error ?? "Erro ao validar ingresso." });
       } else {
-        setResult({ success: true, message: "Ingresso válido!", ticket: data.ticket });
+        setResult({
+          success: true,
+          message: "Ingresso válido! Pode entrar.",
+          ticket: data.ticket,
+        });
       }
     } catch {
       setResult({ success: false, message: "Erro de conexão." });
     } finally {
       setLoading(false);
-      setToken("");
+      // não limpar token automaticamente para ficar visível e poder conferir
     }
   }
 
@@ -97,6 +101,7 @@ export default function CheckInPage() {
       const qrData = qr.data.trim();
       if (!detectedRef.current.has(qrData)) {
         detectedRef.current.add(qrData);
+        setToken(qrData); // mostrar token no input para conferência
         handleCheckin(qrData);
         // Pausa 2s após detectar para não spammar
         setTimeout(() => {
@@ -203,6 +208,7 @@ export default function CheckInPage() {
               <div className="mt-3 text-sm text-gray-600 space-y-1">
                 <p><strong>{result.ticket.buyerName}</strong></p>
                 <p>Lote: {result.ticket.tierName}</p>
+                <p className="text-sm font-medium text-green-700">👍 Pode entrar!</p>
                 {result.ticket.checkedInAt && (
                   <p className="text-xs text-gray-400">
                     Entrada às{" "}
@@ -213,6 +219,9 @@ export default function CheckInPage() {
                   </p>
                 )}
               </div>
+            )}
+            {token && (
+              <p className="text-xs text-gray-500 mt-2">Token usado: {token}</p>
             )}
           </div>
         )}
