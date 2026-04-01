@@ -5,6 +5,8 @@ import { getMessages } from "next-intl/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Link from "next/link";
+import { UserMenu } from "@/components/UserMenu";
+import { Providers } from "@/components/Providers";
 import "../globals.css";
 
 export const metadata: Metadata = {
@@ -44,6 +46,11 @@ async function Navbar({ locale }: { locale: string }) {
                   Meus Ingressos
                 </Link>
               )}
+              <UserMenu
+                name={session.user.name ?? "Utilizador"}
+                email={session.user.email ?? ""}
+                locale={locale}
+              />
             </>
           ) : (
             <>
@@ -82,8 +89,10 @@ export default async function LocaleLayout({
     <html lang={locale}>
       <body>
         <NextIntlClientProvider messages={messages}>
-          <Navbar locale={locale} />
-          {children}
+          <Providers>
+            <Navbar locale={locale} />
+            {children}
+          </Providers>
         </NextIntlClientProvider>
       </body>
     </html>
