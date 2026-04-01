@@ -183,9 +183,23 @@ export default function CheckInPage() {
     typeof navigator !== "undefined" &&
     typeof navigator.mediaDevices?.getUserMedia === "function";
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      document.documentElement.style.overflowX = "hidden";
+      document.body.style.overflowX = "hidden";
+    }
+
+    return () => {
+      if (typeof window !== "undefined") {
+        document.documentElement.style.overflowX = "auto";
+        document.body.style.overflowX = "auto";
+      }
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4 lg:p-8">
-      <div className="max-w-lg mx-auto">
+    <div className="min-h-screen bg-gray-50 p-4 lg:p-8 overflow-x-hidden">
+      <div className="w-full max-w-[min(100%,32rem)] mx-auto"> 
         <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">Validar Entradas</h1>
         <p className="text-sm text-gray-500 mb-6">
           Usa a câmera ou introduz manualmente o token do ingresso.
@@ -237,7 +251,7 @@ export default function CheckInPage() {
         {/* Vídeo — sempre no DOM para o ref funcionar; visível só quando scanning */}
         <div className={`mb-6 ${scanning ? "block" : "hidden"}`}>
           <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <div className="relative bg-black" style={{ aspectRatio: "16/9" }}>
+            <div className="relative bg-black w-full" style={{ aspectRatio: "16/9", maxHeight: "60vw", minHeight: "200px" }}>
               {/* muted DEVE estar aqui no JSX para iOS Safari permitir autoplay */}
               <video
                 ref={videoRef}
@@ -245,6 +259,7 @@ export default function CheckInPage() {
                 playsInline
                 muted
                 className="w-full h-full object-cover"
+                style={{ width: "100%", height: "100%" }}
               />
               {/* Canvas oculto usado para extrair frames */}
               <canvas ref={canvasRef} className="hidden" />
