@@ -58,15 +58,35 @@ export async function POST(req: NextRequest) {
     reference: idempotencyKey,
   });
 
-  const payment = await db.payment.create({
-    data: {
-      orderId,
-      provider: "EMOLA",
-      providerRef: result.providerRef ?? null,
-      idempotencyKey,
-      amount: order.totalAmount,
-      status: result.success ? "PENDING" : "FAILED",
-    },
+  if (!result.success) {
+    const failed = await db.payment.create({
+      data: {
+        orderId,
+        provider: "EMOLA",
+        providerRef: null,
+        idempotencyKey,
+        amount: order.totalAmount,
+        status: "FAILED",
+      },
+    });
+    return NextResponse.json(failed, { status: 201 });
+  }
+
+  // Mock e-Mola: confirma imediatamente (sem push real)
+  const payment = await db.$transaction(async (tx) => {
+    const p = await tx.payment.create({
+      data: {
+        orderId,
+        provider: "EMOLA",
+        providerRef: result.providerRef ?? null,
+        idempotencyKey,
+        amount: order.totalAmount,
+        status: "COMPLETED",
+      },
+    });
+    await tx.order.update({ where: { id: orderId }, data: { status: "PAID" } });
+    await tx.ticket.updateMany({ where: { orderId }, data: { status: "ACTIVE" } });
+    return p;
   });
 
   return NextResponse.json(payment, { status: 201 });
