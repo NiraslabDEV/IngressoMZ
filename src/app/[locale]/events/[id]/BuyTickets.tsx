@@ -106,7 +106,7 @@ export default function BuyTickets({ eventId, tiers, locale, isLoggedIn }: Props
         return;
       }
 
-      const payData = await payRes.json() as { paymentId?: string; url?: string };
+      const payData = await payRes.json() as { id?: string; url?: string };
 
       // Stripe — redirecionar para checkout
       if (method === "STRIPE" && payData.url) {
@@ -115,9 +115,9 @@ export default function BuyTickets({ eventId, tiers, locale, isLoggedIn }: Props
       }
 
       // M-Pesa / e-Mola — polling
-      if (payData.paymentId) {
+      if (payData.id) {
         setStep("polling");
-        await pollPayment(payData.paymentId, order.id);
+        await pollPayment(payData.id, order.id);
       }
     } catch {
       setError("Erro de conexão. Tente novamente.");
