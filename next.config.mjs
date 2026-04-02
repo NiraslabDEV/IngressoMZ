@@ -4,7 +4,9 @@ const withNextIntl = createNextIntlPlugin();
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ["@react-pdf/renderer", "canvas"],
+  experimental: {
+    serverComponentsExternalPackages: ["@react-pdf/renderer", "canvas"],
+  },
   headers: async () => [
     {
       source: "/(.*)",
