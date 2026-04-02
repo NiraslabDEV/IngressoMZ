@@ -30,22 +30,46 @@ function EventCard({
   return (
     <Link
       href={`/${locale}/events/${event.id}`}
-      className={`group bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-200 ${
-        featured ? "ring-2 ring-orange-400" : ""
-      }`}
+      className="group bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
     >
       {/* Imagem */}
-      <div className="relative h-44 bg-gradient-to-br from-orange-100 to-orange-50">
+      <div className="relative aspect-[4/3] bg-gray-800 overflow-hidden">
         {event.imageUrl ? (
-          <Image src={event.imageUrl} alt={event.title} fill className="object-cover" />
+          <Image
+            src={event.imageUrl}
+            alt={event.title}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
+          />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-5xl">🎵</div>
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-12 h-12 text-gray-600"
+            >
+              <path d="M9 18V5l12-2v13" />
+              <circle cx="6" cy="18" r="3" />
+              <circle cx="18" cy="16" r="3" />
+            </svg>
+          </div>
         )}
         {featured && (
-          <span className="absolute top-3 left-3 bg-orange-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">
+          <span className="absolute top-3 left-3 bg-blue-400 text-black text-xs font-semibold px-3 py-1 rounded-full">
             Destaque
           </span>
         )}
+        <span className="absolute top-3 right-3 bg-gray-900/90 backdrop-blur-sm text-white text-xs font-medium px-2.5 py-1 rounded-full">
+          {new Date(event.startsAt).toLocaleDateString("pt-MZ", {
+            day: "2-digit",
+            month: "short",
+          })}
+        </span>
         {soldOut && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
             <span className="bg-white text-gray-900 text-sm font-bold px-4 py-1.5 rounded-full">
@@ -56,29 +80,21 @@ function EventCard({
       </div>
 
       {/* Info */}
-      <div className="p-4">
-        <h3 className="font-semibold text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-1">
+      <div className="p-5">
+        <h3 className="font-semibold text-white line-clamp-1">
           {event.title}
         </h3>
-        <p className="text-sm text-gray-500 mt-1 line-clamp-1">📍 {event.venue}</p>
-        <p className="text-sm text-gray-500 mt-0.5">
-          🗓️{" "}
-          {new Date(event.startsAt).toLocaleDateString("pt-MZ", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-          })}
-        </p>
+        <p className="text-sm text-gray-400 mt-1 line-clamp-1">{event.venue}</p>
         <div className="mt-3 flex items-center justify-between">
           {minPrice !== null && !soldOut ? (
-            <span className="text-sm font-semibold text-orange-600">
-              A partir de {fmt(minPrice)} MZN
+            <span className="text-lg font-bold text-blue-400">
+              {fmt(minPrice)} MZN
             </span>
           ) : (
             <span />
           )}
           {!soldOut && (
-            <span className="text-xs bg-orange-50 text-orange-600 font-medium px-3 py-1 rounded-full group-hover:bg-orange-500 group-hover:text-white transition-colors">
+            <span className="text-sm text-blue-400 font-medium group-hover:text-blue-300">
               Ver evento
             </span>
           )}
@@ -124,88 +140,149 @@ export default async function HomePage({ params }: { params: { locale: string } 
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-orange-500 to-orange-700 text-white py-20 px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Os melhores eventos de Moçambique
-          </h1>
-          <p className="text-orange-100 text-lg mb-8">
-            Concertos, baladas, teatro, artes e muito mais. Compra o teu ingresso online.
+      <section className="relative bg-gray-950 overflow-hidden">
+        {/* Background image from Unsplash */}
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=1920&q=80"
+            alt=""
+            className="w-full h-full object-cover opacity-30"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-gray-950/50 via-gray-950/80 to-gray-950" />
+        </div>
+        <div className="relative max-w-5xl mx-auto px-6 pt-32 pb-24 text-center">
+          <p className="text-blue-400 text-sm font-semibold tracking-widest uppercase mb-4 animate-fade-in">
+            A plataforma de eventos de Moçambique
           </p>
-          <div className="inline-flex gap-3">
-            <a
-              href="#events"
-              className="bg-white text-orange-600 font-semibold px-6 py-3 rounded-xl hover:bg-orange-50 transition-colors"
-            >
-              Ver eventos
+          <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-white mb-6 animate-fade-up">
+            Vive cada momento.<br />
+            <span className="text-blue-400">Garante o teu lugar.</span>
+          </h1>
+          <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 animate-fade-up" style={{ animationDelay: "0.1s" }}>
+            Concertos, festivais, teatro e muito mais. Compra ingressos com M-Pesa em segundos e recebe o teu QR code na hora.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-up" style={{ animationDelay: "0.2s" }}>
+            <a href="#events" className="bg-blue-400 text-black font-semibold px-8 py-4 rounded-full hover:bg-blue-300 transition-colors duration-200 text-base">
+              Explorar eventos
             </a>
-            <Link
-              href={`/${locale}/auth/register`}
-              className="border-2 border-white text-white font-semibold px-6 py-3 rounded-xl hover:bg-white/10 transition-colors"
-            >
-              Criar conta grátis
+            <Link href={`/${locale}/auth/register`} className="border border-blue-400/30 text-white font-semibold px-8 py-4 rounded-full hover:bg-blue-400/10 transition-colors duration-200 text-base backdrop-blur-sm">
+              Criar conta gratis
             </Link>
           </div>
         </div>
       </section>
 
-      <main className="max-w-6xl mx-auto px-4 py-12" id="events">
+      {/* Stats bar */}
+      <section className="border-b border-gray-800 bg-black/50">
+        <div className="max-w-5xl mx-auto px-6 py-8 grid grid-cols-3 gap-8 text-center">
+          <div>
+            <p className="text-3xl font-bold text-white">500+</p>
+            <p className="text-sm text-gray-400 mt-1">Eventos realizados</p>
+          </div>
+          <div>
+            <p className="text-3xl font-bold text-white">50K+</p>
+            <p className="text-sm text-gray-400 mt-1">Ingressos vendidos</p>
+          </div>
+          <div>
+            <p className="text-3xl font-bold text-blue-400">M-Pesa</p>
+            <p className="text-sm text-gray-400 mt-1">Pagamento instantaneo</p>
+          </div>
+        </div>
+      </section>
+
+      <main id="events">
         {/* Destaques */}
         {highlights.length > 0 && (
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">🔥 Eventos em Destaque</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {highlights.map((h) => (
-                <EventCard
-                  key={h.event.id}
-                  event={{
-                    ...h.event,
-                    tiers: h.event.tiers.map((t) => ({
-                      price: Number(t.price),
-                      soldQty: t.soldQty,
-                      totalQty: t.totalQty,
-                    })),
-                  }}
-                  locale={locale}
-                  featured
-                />
-              ))}
+          <section className="py-20 px-6 bg-gray-950/50">
+            <div className="max-w-5xl mx-auto">
+              <h2 className="text-3xl font-bold tracking-tight text-white">Em destaque</h2>
+              <p className="text-gray-400 mt-2 mb-10">Os eventos mais quentes desta semana</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {highlights.map((h) => (
+                  <EventCard
+                    key={h.event.id}
+                    event={{
+                      ...h.event,
+                      tiers: h.event.tiers.map((t) => ({
+                        price: Number(t.price),
+                        soldQty: t.soldQty,
+                        totalQty: t.totalQty,
+                      })),
+                    }}
+                    locale={locale}
+                    featured
+                  />
+                ))}
+              </div>
             </div>
           </section>
         )}
 
         {/* Próximos eventos */}
-        <section>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">📅 Próximos Eventos</h2>
-          {upcoming.length === 0 ? (
-            <div className="text-center py-16 text-gray-400">
-              <p className="text-5xl mb-4">🎭</p>
-              <p>Nenhum evento disponível de momento.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {upcoming.map((event) => (
-                <EventCard
-                  key={event.id}
-                  event={{
-                    ...event,
-                    tiers: event.tiers.map((t) => ({
-                      price: Number(t.price),
-                      soldQty: t.soldQty,
-                      totalQty: t.totalQty,
-                    })),
-                  }}
-                  locale={locale}
-                />
-              ))}
-            </div>
-          )}
+        <section className="py-20 px-6 bg-black/30">
+          <div className="max-w-5xl mx-auto">
+            <h2 className="text-3xl font-bold tracking-tight text-white">Proximos eventos</h2>
+            <p className="text-gray-400 mt-2 mb-10">Nao percas o que vem a seguir</p>
+            {upcoming.length === 0 ? (
+              <div className="text-center py-16">
+                <p className="text-gray-300 mb-6">Nenhum evento disponivel de momento.</p>
+                <Link
+                  href={`/${locale}/auth/register`}
+                  className="inline-block bg-blue-400 text-black font-semibold px-6 py-3 rounded-full hover:bg-blue-300 transition-colors"
+                >
+                  Criar conta para ser notificado
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {upcoming.map((event) => (
+                  <EventCard
+                    key={event.id}
+                    event={{
+                      ...event,
+                      tiers: event.tiers.map((t) => ({
+                        price: Number(t.price),
+                        soldQty: t.soldQty,
+                        totalQty: t.totalQty,
+                      })),
+                    }}
+                    locale={locale}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </section>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-100 mt-16 py-8 text-center text-sm text-gray-400">
-        <p>© {new Date().getFullYear()} Ingresso MZ · Todos os direitos reservados</p>
+      <footer className="bg-black text-gray-400 mt-20 border-t border-gray-800">
+        <div className="max-w-5xl mx-auto px-6 py-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-12">
+            <div>
+              <p className="text-white font-bold text-lg mb-3 flex items-center gap-2">Ingresso MZ</p>
+              <p className="text-sm leading-relaxed">A forma mais facil de comprar ingressos para eventos em Mocambique. Paga com M-Pesa, recebe o QR code.</p>
+            </div>
+            <div>
+              <p className="text-white font-semibold text-sm mb-3">Plataforma</p>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#events" className="text-gray-400 hover:text-blue-400 transition-colors">Eventos</a></li>
+                <li><Link href={`/${locale}/auth/register`} className="text-gray-400 hover:text-blue-400 transition-colors">Criar conta</Link></li>
+                <li><Link href={`/${locale}/auth/login`} className="text-gray-400 hover:text-blue-400 transition-colors">Entrar</Link></li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-white font-semibold text-sm mb-3">Organizadores</p>
+              <ul className="space-y-2 text-sm">
+                <li><Link href={`/${locale}/auth/register`} className="text-gray-400 hover:text-blue-400 transition-colors">Publicar evento</Link></li>
+                <li><Link href={`/${locale}/organizer/dashboard`} className="text-gray-400 hover:text-blue-400 transition-colors">Painel</Link></li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-gray-800 pt-8 text-center text-sm text-gray-500">
+            <p>&copy; {new Date().getFullYear()} Ingresso MZ. Todos os direitos reservados.</p>
+          </div>
+        </div>
       </footer>
     </div>
   );
