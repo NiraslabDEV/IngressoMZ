@@ -73,6 +73,7 @@ export default function AccountPage() {
   async function handleBecomeOrganizer() {
     setUpgradingRole(true);
     setUpgradeSuccess(false);
+    setError("");
     try {
       const res = await fetch("/api/account", {
         method: "PATCH",
@@ -86,7 +87,6 @@ export default function AccountPage() {
         return;
       }
 
-      // Update session so new role is reflected immediately
       await update();
       setUpgradeSuccess(true);
       router.push(`/${locale}/organizer/dashboard`);
@@ -141,7 +141,6 @@ export default function AccountPage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Nome */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
           <input
@@ -152,7 +151,6 @@ export default function AccountPage() {
           />
         </div>
 
-        {/* Alterar password */}
         <div className="border-t border-gray-100 pt-6">
           <h2 className="text-sm font-semibold text-gray-700 mb-4">Alterar palavra-passe</h2>
           <div className="space-y-4">
