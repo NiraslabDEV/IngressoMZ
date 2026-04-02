@@ -143,10 +143,12 @@ export default async function HomePage({ params }: { params: { locale: string } 
       <section className="relative bg-gray-950 overflow-hidden">
         {/* Background image from Unsplash */}
         <div className="absolute inset-0">
-          <img
+          <Image
             src="https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=1920&q=80"
             alt=""
+            fill
             className="w-full h-full object-cover opacity-30"
+            priority
           />
           <div className="absolute inset-0 bg-gradient-to-b from-gray-950/50 via-gray-950/80 to-gray-950" />
         </div>

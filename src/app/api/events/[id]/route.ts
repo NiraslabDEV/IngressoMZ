@@ -26,6 +26,7 @@ const updateEventSchema = z.object({
     .optional(),
   startsAt: z.string().datetime().optional(),
   endsAt: z.string().datetime().optional(),
+  imageUrl: z.string().url().optional().nullable(),
   status: z.enum(["DRAFT", "PUBLISHED", "CANCELLED", "FINISHED"]).optional(),
 });
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { ImageUpload } from "@/components/ImageUpload";
 
 interface Tier {
   id?: string;
@@ -49,17 +50,19 @@ export default function EditEventPage() {
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [status, setStatus] = useState("DRAFT");
+  const [imageUrl, setImageUrl] = useState("");
 
   useEffect(() => {
     fetch(`/api/events/${id}`)
       .then((r) => r.json())
-      .then((data: EventData) => {
+      .then((data: EventData & { imageUrl?: string }) => {
         setTitle(data.title);
         setDescription(data.description);
         setVenue(data.venue);
         setStartsAt(toDatetimeLocal(data.startsAt));
         setEndsAt(toDatetimeLocal(data.endsAt));
         setStatus(data.status);
+        setImageUrl(data.imageUrl ?? "");
         setLoading(false);
       })
       .catch(() => {
@@ -84,6 +87,7 @@ export default function EditEventPage() {
           startsAt: new Date(startsAt).toISOString(),
           endsAt: endsAt ? new Date(endsAt).toISOString() : undefined,
           status,
+          imageUrl: imageUrl || null,
         }),
       });
 
@@ -155,6 +159,15 @@ export default function EditEventPage() {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Flyer */}
+        <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6">
+          <label className="block text-sm font-semibold text-gray-700 mb-3">
+            Flyer do Evento
+            <span className="text-gray-400 font-normal ml-1">(opcional)</span>
+          </label>
+          <ImageUpload value={imageUrl} onChange={setImageUrl} />
         </div>
 
         <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6 space-y-4">
