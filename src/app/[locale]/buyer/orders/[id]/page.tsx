@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import QRCode from "qrcode";
+import { DownloadTicketButton } from "@/components/DownloadTicketButton";
 
 function fmt(value: number) {
   return value.toLocaleString("pt-MZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -32,6 +33,7 @@ export default async function OrderPage({
   const qrCodes = await Promise.all(
     order.tickets.map(async (t) => ({
       id: t.id,
+      token: t.token,
       qr: t.status === "ACTIVE" ? await QRCode.toDataURL(t.token, { width: 180, margin: 1 }) : null,
       tierName: t.tier.name,
       status: t.status,
@@ -146,6 +148,11 @@ export default async function OrderPage({
                 {t.status === "USED" && `Utilizado às ${t.checkedInAt ? new Date(t.checkedInAt).toLocaleTimeString("pt-MZ", { hour: "2-digit", minute: "2-digit" }) : ""}`}
                 {t.status === "CANCELLED" && "Ingresso cancelado"}
               </p>
+              {t.status === "ACTIVE" && t.token && (
+                <div className="mt-2">
+                  <DownloadTicketButton token={t.token} />
+                </div>
+              )}
             </div>
           </div>
         ))}

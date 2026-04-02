@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import type { AuthedSession } from "@/lib/api";
 import { getMpesaPayments } from "@/lib/payments/e2payments";
+import { sendOrderConfirmationEmail } from "@/lib/sendOrderEmail";
 
 type RouteParams = { params: { paymentId: string } };
 
@@ -56,6 +57,11 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
         where: { orderId: payment.orderId },
         data: { status: "ACTIVE" },
       });
+
+      // Enviar email com PDF em background (não bloqueia a resposta)
+      sendOrderConfirmationEmail(payment.orderId).catch((err) =>
+        console.error("[poll] email send failed:", err)
+      );
 
       return NextResponse.json({ status: "COMPLETED" });
     }
