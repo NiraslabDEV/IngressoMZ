@@ -42,9 +42,12 @@ export default async function EventPage({
     <div className="min-h-screen bg-black">
       {/* Banner */}
       <div className="relative h-72 md:h-96 bg-gradient-to-br from-blue-500 to-blue-700">
-        {event.imageUrl && (
-          <Image src={event.imageUrl} alt={event.title} fill className="object-cover opacity-60" />
-        )}
+<Image
+  src={event.imageUrl ?? `https://picsum.photos/seed/${event.id}/1200/400`}
+  alt={event.title}
+  fill
+  className="object-cover opacity-60"
+/>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 max-w-6xl mx-auto">
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{event.title}</h1>
