@@ -90,7 +90,16 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id;
-        session.user.role = token.role;
+        // Re-read role from DB on every session access — prevents stale JWT role
+        if (token.id) {
+          const dbUser = await db.user.findUnique({
+            where: { id: token.id as string },
+            select: { role: true },
+          });
+          session.user.role = dbUser?.role ?? token.role;
+        } else {
+          session.user.role = token.role;
+        }
       }
       return session;
     },

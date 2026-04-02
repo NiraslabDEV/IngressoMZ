@@ -15,7 +15,6 @@ function GoogleIcon() {
   );
 }
 
-type Role = "BUYER" | "ORGANIZER";
 type Mode = "login" | "register";
 
 export default function AuthPage() {
@@ -23,19 +22,13 @@ export default function AuthPage() {
   const { locale } = useParams() as { locale: string };
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
-  const isOrganizerSetup = searchParams.get("msg") === "organizer";
 
   const [mode, setMode] = useState<Mode>("login");
-  const [role, setRole] = useState<Role>("BUYER");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const defaultCallback = role === "ORGANIZER"
-    ? `/${locale}/organizer/dashboard`
-    : `/${locale}/buyer/tickets`;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,7 +40,7 @@ export default function AuthPage() {
         const res = await fetch("/api/auth/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, email, password, role }),
+          body: JSON.stringify({ name, email, password, role: "BUYER" }),
         });
         if (!res.ok) {
           const d = await res.json();
@@ -67,7 +60,7 @@ export default function AuthPage() {
         return;
       }
 
-      router.push(callbackUrl ?? defaultCallback);
+      router.push(callbackUrl ?? `/${locale}/buyer/tickets`);
       router.refresh();
     } catch {
       setError("Erro de conexão. Tente novamente.");
@@ -77,10 +70,7 @@ export default function AuthPage() {
   }
 
   function handleGoogle() {
-    const cb = role === "ORGANIZER"
-      ? `/${locale}/auth/setup-role?role=ORGANIZER`
-      : (callbackUrl ?? `/${locale}/buyer/tickets`);
-    signIn("google", { callbackUrl: cb });
+    signIn("google", { callbackUrl: callbackUrl ?? `/${locale}/buyer/tickets` });
   }
 
   return (
@@ -88,38 +78,12 @@ export default function AuthPage() {
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
 
-          {/* Mensagem pós setup-role */}
-          {isOrganizerSetup && (
-            <div className="bg-orange-50 border border-orange-200 text-orange-800 px-4 py-3 rounded-lg text-sm mb-6">
-              ✅ Conta de organizador activada! Entra novamente para aceder ao painel.
-            </div>
-          )}
-
-          {/* Tipo de conta */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <button
-              type="button"
-              onClick={() => setRole("BUYER")}
-              className={`py-3 rounded-xl border-2 text-sm font-semibold transition-colors ${
-                role === "BUYER"
-                  ? "border-orange-500 bg-orange-50 text-orange-700"
-                  : "border-gray-200 text-gray-500 hover:border-gray-300"
-              }`}
-            >
-              🎟️ Sou Comprador
-            </button>
-            <button
-              type="button"
-              onClick={() => setRole("ORGANIZER")}
-              className={`py-3 rounded-xl border-2 text-sm font-semibold transition-colors ${
-                role === "ORGANIZER"
-                  ? "border-orange-500 bg-orange-50 text-orange-700"
-                  : "border-gray-200 text-gray-500 hover:border-gray-300"
-              }`}
-            >
-              🎪 Sou Organizador
-            </button>
-          </div>
+          <h1 className="text-2xl font-bold text-gray-900 text-center mb-2">
+            {mode === "login" ? "Bem-vindo de volta" : "Cria a tua conta"}
+          </h1>
+          <p className="text-sm text-gray-500 text-center mb-8">
+            {mode === "login" ? "Entra para comprar ou gerir eventos" : "Regista-te para começar"}
+          </p>
 
           {/* Toggle login / registo */}
           <div className="flex rounded-xl border border-gray-200 p-1 mb-6">
@@ -221,7 +185,6 @@ export default function AuthPage() {
             >
               <GoogleIcon />
               Continuar com Google
-              {role === "ORGANIZER" && <span className="text-xs text-orange-600 font-semibold">(Organizador)</span>}
             </button>
           </div>
 

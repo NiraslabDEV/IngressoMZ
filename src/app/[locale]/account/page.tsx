@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
 export default function AccountPage() {
   const { data: session, update } = useSession();
   const router = useRouter();
+  const { locale } = useParams() as { locale: string };
 
   const [name, setName] = useState(session?.user?.name ?? "");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -15,6 +16,10 @@ export default function AccountPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [upgradingRole, setUpgradingRole] = useState(false);
+  const [upgradeSuccess, setUpgradeSuccess] = useState(false);
+
+  const isOrganizer = session?.user?.role === "ORGANIZER";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,7 +58,6 @@ export default function AccountPage() {
         return;
       }
 
-      // Actualizar sessão com novo nome
       await update({ name: data.user.name });
       setSuccess("Perfil actualizado com sucesso!");
       setCurrentPassword("");
@@ -63,6 +67,34 @@ export default function AccountPage() {
       setError("Erro de rede. Tenta novamente.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleBecomeOrganizer() {
+    setUpgradingRole(true);
+    setUpgradeSuccess(false);
+    try {
+      const res = await fetch("/api/account", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: "ORGANIZER" }),
+      });
+
+      if (!res.ok) {
+        const d = await res.json();
+        setError(d.error ?? "Erro ao activar conta de organizador.");
+        return;
+      }
+
+      // Update session so new role is reflected immediately
+      await update();
+      setUpgradeSuccess(true);
+      router.push(`/${locale}/organizer/dashboard`);
+      router.refresh();
+    } catch {
+      setError("Erro de rede. Tenta novamente.");
+    } finally {
+      setUpgradingRole(false);
     }
   }
 
@@ -81,6 +113,33 @@ export default function AccountPage() {
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Editar perfil</h1>
       <p className="text-sm text-gray-500 mb-8">{session?.user?.email}</p>
 
+      {/* Tornar-me Organizador */}
+      {!isOrganizer && (
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-5 mb-8">
+          <h2 className="text-sm font-semibold text-orange-800 mb-1">Quer organizar eventos?</h2>
+          <p className="text-xs text-orange-700 mb-4">
+            Activa a conta de organizador para criar e gerir os teus eventos na plataforma.
+          </p>
+          {upgradeSuccess && (
+            <p className="text-xs text-green-700 mb-3">✅ Conta de organizador activada!</p>
+          )}
+          <button
+            type="button"
+            onClick={handleBecomeOrganizer}
+            disabled={upgradingRole}
+            className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
+          >
+            {upgradingRole ? "A activar..." : "🎪 Tornar-me Organizador"}
+          </button>
+        </div>
+      )}
+
+      {isOrganizer && (
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-8 text-sm text-green-800 font-medium">
+          ✅ Conta de organizador activa
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Nome */}
         <div>
@@ -93,7 +152,7 @@ export default function AccountPage() {
           />
         </div>
 
-        {/* Alterar password — só para contas com password */}
+        {/* Alterar password */}
         <div className="border-t border-gray-100 pt-6">
           <h2 className="text-sm font-semibold text-gray-700 mb-4">Alterar palavra-passe</h2>
           <div className="space-y-4">
