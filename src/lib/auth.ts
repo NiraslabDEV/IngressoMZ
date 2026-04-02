@@ -55,7 +55,7 @@ export const authOptions: NextAuthOptions = {
           token.role = (user as unknown as { role: string }).role;
         } else {
           // Login social (Google, etc.) — criar ou recuperar utilizador no Prisma
-          const email = user.email ?? token.email;
+          const email = user.email ?? (token.email as string | undefined);
           if (email) {
             const dbUser = await db.user.upsert({
               where: { email },
@@ -71,6 +71,20 @@ export const authOptions: NextAuthOptions = {
           }
         }
       }
+
+      // Fallback: se token.id não for UUID válido (ex: sub Google em sessões antigas)
+      // re-busca o utilizador na DB pelo email
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(token.id ?? "");
+      if (!isUUID && token.email) {
+        const dbUser = await db.user.findUnique({
+          where: { email: token.email as string },
+        });
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.role = dbUser.role;
+        }
+      }
+
       return token;
     },
     async session({ session, token }) {
