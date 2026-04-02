@@ -42,7 +42,7 @@ export default function BuyTickets({ eventId, tiers, locale, isLoggedIn }: Props
     return (
       <a
         href={`/${locale}/auth/login?callbackUrl=/${locale}/events/${eventId}`}
-        className="block w-full bg-orange-500 hover:bg-orange-600 text-white text-center font-semibold py-3 rounded-xl transition-colors"
+        className="block w-full bg-blue-400 hover:bg-blue-300 text-black text-center font-semibold py-3 rounded-xl transition-colors"
       >
         Entrar para comprar
       </a>
@@ -154,7 +154,7 @@ export default function BuyTickets({ eventId, tiers, locale, isLoggedIn }: Props
     return (
       <div className="text-center py-4">
         <div className="text-4xl mb-2">✅</div>
-        <p className="font-semibold text-green-600">Pagamento confirmado!</p>
+        <p className="font-semibold text-green-400">Pagamento confirmado!</p>
         <p className="text-xs text-gray-400 mt-1">A redirecionar para os seus ingressos...</p>
       </div>
     );
@@ -164,7 +164,7 @@ export default function BuyTickets({ eventId, tiers, locale, isLoggedIn }: Props
     return (
       <div className="text-center py-4">
         <div className="animate-spin text-3xl mb-3">⏳</div>
-        <p className="font-semibold text-gray-700">A aguardar confirmação do pagamento...</p>
+        <p className="font-semibold text-white">A aguardar confirmação do pagamento...</p>
         <p className="text-xs text-gray-400 mt-2">Confirme o pagamento no seu telemóvel</p>
       </div>
     );
@@ -173,18 +173,18 @@ export default function BuyTickets({ eventId, tiers, locale, isLoggedIn }: Props
   return (
     <div className="space-y-4">
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-xs">
+        <div className="bg-red-950/30 border border-red-800 text-red-400 px-3 py-2 rounded-lg text-xs">
           {error}
         </div>
       )}
 
       {/* Seleccionar lote */}
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1.5">Tipo de ingresso</label>
+        <label className="block text-xs font-medium text-gray-400 mb-1.5">Tipo de ingresso</label>
         <select
           value={selectedTier}
           onChange={(e) => setSelectedTier(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+          className="w-full border border-gray-700 rounded-lg px-3 py-2 text-sm bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
           {availableTiers.map((t) => (
             <option key={t.id} value={t.id}>
@@ -196,18 +196,18 @@ export default function BuyTickets({ eventId, tiers, locale, isLoggedIn }: Props
 
       {/* Quantidade */}
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1.5">Quantidade</label>
+        <label className="block text-xs font-medium text-gray-400 mb-1.5">Quantidade</label>
         <div className="flex items-center gap-3">
           <button
             onClick={() => setQty(Math.max(1, qty - 1))}
-            className="w-8 h-8 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50 flex items-center justify-center font-bold"
+            className="w-8 h-8 rounded-full border border-gray-700 text-gray-300 hover:bg-gray-800 flex items-center justify-center font-bold"
           >
             −
           </button>
-          <span className="text-lg font-semibold w-6 text-center">{qty}</span>
+          <span className="text-lg font-semibold w-6 text-center text-white">{qty}</span>
           <button
             onClick={() => setQty(Math.min(10, qty + 1))}
-            className="w-8 h-8 rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50 flex items-center justify-center font-bold"
+            className="w-8 h-8 rounded-full border border-gray-700 text-gray-300 hover:bg-gray-800 flex items-center justify-center font-bold"
           >
             +
           </button>
@@ -216,7 +216,7 @@ export default function BuyTickets({ eventId, tiers, locale, isLoggedIn }: Props
 
       {/* Método de pagamento */}
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1.5">
+        <label className="block text-xs font-medium text-gray-400 mb-1.5">
           Método de pagamento
         </label>
         <div className="grid grid-cols-3 gap-2">
@@ -226,8 +226,8 @@ export default function BuyTickets({ eventId, tiers, locale, isLoggedIn }: Props
               onClick={() => setMethod(m)}
               className={`py-2 rounded-lg border text-xs font-medium transition-colors ${
                 method === m
-                  ? "border-orange-500 bg-orange-50 text-orange-700"
-                  : "border-gray-200 text-gray-600 hover:border-gray-300"
+                  ? "border-blue-400 bg-blue-950 text-blue-400"
+                  : "border-gray-700 text-gray-400 hover:border-gray-600"
               }`}
             >
               {m === "MPESA" ? "M-Pesa" : m === "EMOLA" ? "e-Mola" : "Cartão"}
@@ -239,7 +239,7 @@ export default function BuyTickets({ eventId, tiers, locale, isLoggedIn }: Props
       {/* Número de telefone */}
       {(method === "MPESA" || method === "EMOLA") && (
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1.5">
+          <label className="block text-xs font-medium text-gray-400 mb-1.5">
             Número {method === "MPESA" ? "M-Pesa" : "e-Mola"}
           </label>
           <input
@@ -247,21 +247,21 @@ export default function BuyTickets({ eventId, tiers, locale, isLoggedIn }: Props
             value={phone}
             onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 9))}
             placeholder="841234567"
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+            className="w-full border border-gray-700 rounded-lg px-3 py-2 text-sm bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
         </div>
       )}
 
       {/* Total + botão */}
-      <div className="pt-2 border-t border-gray-100">
+      <div className="pt-2 border-t border-gray-800">
         <div className="flex justify-between text-sm mb-3">
-          <span className="text-gray-600">Total</span>
-          <span className="font-bold text-gray-900">{fmt(total)} MZN</span>
+          <span className="text-gray-400">Total</span>
+          <span className="font-bold text-white">{fmt(total)} MZN</span>
         </div>
         <button
           onClick={handleBuy}
           disabled={step === "pay"}
-          className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50"
+          className="w-full bg-blue-400 hover:bg-blue-300 text-black font-semibold py-3 rounded-xl transition-colors disabled:opacity-50"
         >
           {step === "pay" ? "A processar..." : `Comprar por ${fmt(total)} MZN`}
         </button>
