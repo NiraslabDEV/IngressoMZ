@@ -11,6 +11,7 @@ export default function LoginPage() {
   const params = useParams() as { locale: string };
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? `/${params.locale}/buyer/tickets`;
+  const isOrganizerSetup = searchParams.get("msg") === "organizer";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,6 +54,12 @@ export default function LoginPage() {
               Criar conta grátis
             </Link>
           </p>
+
+          {isOrganizerSetup && (
+            <div className="bg-orange-50 border border-orange-200 text-orange-800 px-4 py-3 rounded-lg text-sm mb-4">
+              ✅ Conta de organizador activada! Entra novamente para aceder ao painel.
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (

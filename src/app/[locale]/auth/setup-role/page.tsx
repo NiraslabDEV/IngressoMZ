@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
+import { signOut } from "next-auth/react";
 
 export default function SetupRolePage() {
   const router = useRouter();
@@ -21,11 +22,17 @@ export default function SetupRolePage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ role: "ORGANIZER" }),
     })
-      .then((res) => {
+      .then(async (res) => {
         if (res.ok) {
           setStatus("done");
-          // Força refresh da sessão e redireciona para o painel
-          setTimeout(() => router.replace(`/${locale}/organizer/dashboard`), 800);
+          // O token JWT ainda tem role=BUYER — precisa de novo login para refletir ORGANIZER
+          // Faz signOut e redireciona para login com callbackUrl para o painel
+          await signOut({
+            redirect: false,
+          });
+          setTimeout(() => {
+            router.replace(`/${locale}/auth/login?callbackUrl=/${locale}/organizer/dashboard&msg=organizer`);
+          }, 1200);
         } else {
           setStatus("error");
         }
