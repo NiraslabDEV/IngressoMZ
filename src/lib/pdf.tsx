@@ -168,6 +168,7 @@ export async function TicketPdfDocument({
           {/* QR Code */}
           <View style={styles.qrSection}>
             <Text style={styles.qrLabel}>Apresente este QR code na entrada</Text>
+            {/* eslint-disable-next-line jsx-a11y/alt-text */}
             <Image src={qrDataUrl} style={{ width: 160, height: 160 }} />
             <Text style={styles.orderId}>Pedido #{orderId} · Ingresso #{ticketId}</Text>
             <Text style={styles.warning}>⚠ Nao partilhe este QR code com terceiros</Text>

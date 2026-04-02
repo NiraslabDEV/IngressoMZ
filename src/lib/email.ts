@@ -1,6 +1,9 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy init — evita erro de build quando RESEND_API_KEY não está definida em dev/CI
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY ?? "");
+}
 const FROM = process.env.EMAIL_FROM ?? "Ingresso MZ <noreply@ingressomz.com>";
 
 export interface TicketEmailData {
@@ -18,6 +21,7 @@ export interface TicketEmailData {
 export async function sendTicketEmail(data: TicketEmailData) {
   const { to, buyerName, eventName, venue, startsAt, tierName, orderId, pdfBuffer, ticketCount } = data;
 
+  const resend = getResend();
   await resend.emails.send({
     from: FROM,
     to,
