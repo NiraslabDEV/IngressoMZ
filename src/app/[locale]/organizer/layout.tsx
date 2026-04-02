@@ -53,6 +53,12 @@ export default async function OrganizerLayout({
               <span>🎟️</span> Meus Eventos
             </Link>
             <Link
+              href={`/${params.locale}/buyer/tickets`}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-gray-800 transition-colors"
+            >
+              <span>🎫</span> Meus Ingressos
+            </Link>
+            <Link
               href={`${base}/events/new`}
               className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-orange-400 hover:bg-gray-800 transition-colors"
             >
@@ -84,6 +90,12 @@ export default async function OrganizerLayout({
           className="flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs hover:bg-gray-800 transition-colors"
         >
           <span className="text-lg">🎟️</span> Eventos
+        </Link>
+        <Link
+          href={`/${params.locale}/buyer/tickets`}
+          className="flex flex-col items-center gap-1 px-3 py-2 rounded-lg text-xs hover:bg-gray-800 transition-colors"
+        >
+          <span className="text-lg">🎫</span> Ingressos
         </Link>
         <Link
           href={`${base}/events/new`}

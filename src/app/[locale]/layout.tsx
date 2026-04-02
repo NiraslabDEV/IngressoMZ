@@ -34,12 +34,20 @@ async function Navbar({ locale }: { locale: string }) {
           {session?.user ? (
             <>
               {role === "ORGANIZER" && (
-                <Link
-                  href={`/${locale}/organizer/dashboard`}
-                  className="text-sm font-medium text-gray-200 hover:text-white transition-colors duration-200"
-                >
-                  Painel
-                </Link>
+                <>
+                  <Link
+                    href={`/${locale}/organizer/dashboard`}
+                    className="text-sm font-medium text-gray-200 hover:text-white transition-colors duration-200"
+                  >
+                    Painel
+                  </Link>
+                  <Link
+                    href={`/${locale}/buyer/tickets`}
+                    className="text-sm font-medium text-gray-200 hover:text-white transition-colors duration-200"
+                  >
+                    Meus Ingressos
+                  </Link>
+                </>
               )}
               {role === "BUYER" && (
                 <Link
