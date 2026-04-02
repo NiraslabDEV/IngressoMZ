@@ -50,7 +50,7 @@ export function HighlightsCarousel({ events, locale }: { events: Event[]; locale
       {/* Cards */}
       <div
         ref={scrollRef}
-        className="flex gap-3 overflow-x-auto scrollbar-hide px-4 pb-2"
+        className="flex gap-3 overflow-x-auto scrollbar-hide pb-2"
         style={{ scrollSnapType: "x mandatory" }}
       >
         {events.map((event) => {

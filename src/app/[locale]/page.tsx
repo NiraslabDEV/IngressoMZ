@@ -3,6 +3,66 @@ import Link from "next/link";
 import Image from "next/image";
 import { HighlightsCarousel } from "@/components/HighlightsCarousel";
 
+/* ─── Hero animado com glassmorphism ──────────────────────────────────────── */
+function HeroSection({ locale }: { locale: string }) {
+  return (
+    <section className="relative bg-gray-950 overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0">
+        <Image
+          src="https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=1920&q=80"
+          alt=""
+          fill
+          className="w-full h-full object-cover opacity-30"
+          priority
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-gray-950/50 via-gray-950/80 to-gray-950" />
+      </div>
+
+      {/* Conteúdo */}
+      <div className="relative max-w-5xl mx-auto px-6 pt-32 pb-24 text-center">
+        <p className="text-blue-400 text-sm font-semibold tracking-widest uppercase mb-4 animate-fade-in">
+          A plataforma de eventos de Moçambique
+        </p>
+        <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-white mb-6 animate-fade-up">
+          Vive cada momento.<br />
+          <span className="text-blue-400">Garante o teu lugar.</span>
+        </h1>
+        <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 animate-fade-up" style={{ animationDelay: "0.1s" }}>
+          Concertos, festivais, teatro e muito mais. Compra ingressos com M-Pesa em segundos e recebe o teu QR code na hora.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-up" style={{ animationDelay: "0.2s" }}>
+          <a href="#events" className="bg-blue-400 text-black font-semibold px-8 py-4 rounded-full hover:bg-blue-300 transition-colors duration-200 text-base">
+            Explorar eventos
+          </a>
+          <Link href={`/${locale}/auth/register`} className="border border-blue-400/30 text-white font-semibold px-8 py-4 rounded-full hover:bg-blue-400/10 transition-colors duration-200 text-base backdrop-blur-sm">
+            Criar conta gratis
+          </Link>
+        </div>
+      </div>
+
+      {/* Stats bar */}
+      <div className="relative border-t border-gray-800 bg-black/50 backdrop-blur-md">
+        <div className="max-w-5xl mx-auto px-6 py-8 grid grid-cols-3 gap-8 text-center">
+          <div>
+            <p className="text-3xl font-bold text-white">500+</p>
+            <p className="text-sm text-gray-400 mt-1">Eventos realizados</p>
+          </div>
+          <div>
+            <p className="text-3xl font-bold text-white">50K+</p>
+            <p className="text-sm text-gray-400 mt-1">Ingressos vendidos</p>
+          </div>
+          <div>
+            <p className="text-3xl font-bold text-blue-400">M-Pesa</p>
+            <p className="text-sm text-gray-400 mt-1">Pagamento instantaneo</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── Helpers ─────────────────────────────────────────────────────────────── */
 function fmt(value: number) {
   return value.toLocaleString("pt-MZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -132,13 +192,16 @@ export default async function HomePage({ params }: { params: { locale: string } 
   return (
     <div className="min-h-screen bg-black text-white">
 
+      {/* ── Hero Section ── */}
+      <HeroSection locale={locale} />
+
       {/* ── Destaques: carrossel de cards grandes ── */}
       {highlightEvents.length > 0 && (
-        <section className="pt-6 pb-2">
+        <section className="pt-8 pb-4">
           <div className="max-w-[1400px] mx-auto px-4">
             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Destaques</p>
+            <HighlightsCarousel events={highlightEvents} locale={locale} />
           </div>
-          <HighlightsCarousel events={highlightEvents} locale={locale} />
         </section>
       )}
 
@@ -194,7 +257,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
       )}
 
       {/* ── Próximos eventos ── */}
-      <section className="max-w-[1400px] mx-auto px-4 pb-20">
+      <section className="max-w-[1400px] mx-auto px-4 pb-20" id="events">
         <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Próximos eventos</p>
 
         {upcoming.length === 0 ? (
@@ -238,7 +301,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
             <div>
               <p className="text-white font-semibold text-sm mb-3">Plataforma</p>
               <ul className="space-y-1.5 text-sm">
-                <li><a href="#" className="hover:text-blue-400 transition-colors">Eventos</a></li>
+                <li><a href="#events" className="hover:text-blue-400 transition-colors">Eventos</a></li>
                 <li><Link href={`/${locale}/auth/login`} className="hover:text-blue-400 transition-colors">Criar conta</Link></li>
               </ul>
             </div>
