@@ -3,7 +3,6 @@ import { z } from "zod";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import type { AuthedSession } from "@/lib/api";
 import { randomBytes } from "crypto";
 
 const createOrderSchema = z.object({
@@ -125,6 +124,8 @@ export async function POST(req: NextRequest) {
     if (err instanceof Error && err.message === "STOCK_EXHAUSTED") {
       return NextResponse.json({ error: "Ingressos insuficientes." }, { status: 400 });
     }
-    return NextResponse.json({ error: "Erro interno." }, { status: 500 });
+    console.error("[orders] Transaction error:", err);
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: `Erro interno: ${message}` }, { status: 500 });
   }
 }
