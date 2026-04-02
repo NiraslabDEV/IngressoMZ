@@ -64,7 +64,7 @@ export default async function DashboardPage({ params }: { params: { locale: stri
   );
 
   return (
-    <div className="min-h-screen bg-black p-4 md:p-8 max-w-6xl">
+    <div className="min-h-screen bg-black p-4 md:p-8 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold text-white">Dashboard</h1>
         <Link

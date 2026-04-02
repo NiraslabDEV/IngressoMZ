@@ -38,7 +38,7 @@ export default async function EventsPage({ params }: { params: { locale: string 
   });
 
   return (
-    <div className="min-h-screen bg-black p-4 md:p-8 max-w-5xl">
+    <div className="min-h-screen bg-black p-4 md:p-8 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold text-white">Meus Eventos</h1>
         <Link

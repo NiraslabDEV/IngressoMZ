@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
+import { ImageUpload } from "@/components/ImageUpload";
 
 interface Tier {
   name: string;
@@ -20,6 +21,7 @@ export default function NewEventPage() {
   const [venue, setVenue] = useState("");
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const [tiers, setTiers] = useState<Tier[]>([
     { name: "", price: "", totalQty: "", salesEndAt: "" },
   ]);
