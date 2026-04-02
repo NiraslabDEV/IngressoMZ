@@ -6,6 +6,8 @@ import type { AuthedSession } from "@/lib/api";
 import { getMpesaPayments } from "@/lib/payments/e2payments";
 import { sendOrderConfirmationEmail } from "@/lib/sendOrderEmail";
 
+export const runtime = "nodejs";
+
 type RouteParams = { params: { paymentId: string } };
 
 // e2Payments não tem webhooks — o frontend chama este endpoint até status != PENDING

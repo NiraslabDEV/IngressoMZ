@@ -5,6 +5,8 @@ import { db } from "@/lib/db";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { TicketPdfDocument } from "@/lib/pdf";
 
+export const runtime = "nodejs";
+
 type RouteParams = { params: { token: string } };
 
 export async function GET(_req: NextRequest, { params }: RouteParams) {
