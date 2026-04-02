@@ -52,6 +52,7 @@ export default function NewEventPage() {
       venue,
       startsAt: new Date(startsAt).toISOString(),
       endsAt: endsAt ? new Date(endsAt).toISOString() : undefined,
+      imageUrl: imageUrl || undefined,
       tiers: tiers.map((t) => ({
         name: t.name,
         price: parseFloat(t.price),
@@ -92,6 +93,15 @@ export default function NewEventPage() {
               {error}
             </div>
           )}
+
+          {/* Flyer */}
+          <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 md:p-6">
+            <label className="block text-sm font-semibold text-white mb-3">
+              Flyer do Evento
+              <span className="text-gray-400 font-normal ml-1">(opcional)</span>
+            </label>
+            <ImageUpload value={imageUrl} onChange={setImageUrl} />
+          </div>
 
           {/* Dados do evento */}
           <div className="bg-gray-900 rounded-xl border border-gray-800 p-4 md:p-6 space-y-4">

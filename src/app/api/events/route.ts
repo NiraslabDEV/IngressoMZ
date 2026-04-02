@@ -33,6 +33,7 @@ const createEventSchema = z.object({
     .datetime()
     .refine((v) => new Date(v) > new Date(), { message: "Data deve ser no futuro." }),
   endsAt: z.string().datetime().optional(),
+  imageUrl: z.string().url().optional(),
   tiers: z.array(tierSchema).min(1, "Pelo menos um lote de ingressos é obrigatório."),
 });
 
