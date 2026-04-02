@@ -109,9 +109,9 @@ export default function EditEventPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-8">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Editar Evento</h1>
+    <div className="max-w-2xl mx-auto px-4 py-6 md:p-8">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-900">Editar Evento</h1>
         <button
           onClick={() => router.push(`/${locale}/organizer/events`)}
           className="text-sm text-gray-500 hover:text-gray-700"
@@ -120,7 +120,7 @@ export default function EditEventPage() {
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-5">
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
             {error}
@@ -132,21 +132,33 @@ export default function EditEventPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-gray-800">Informações do Evento</h2>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-            >
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
+        {/* Estado do evento — destaque no mobile */}
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <label className="block text-sm font-semibold text-gray-700 mb-3">Estado do evento</label>
+          <div className="grid grid-cols-2 gap-2">
+            {STATUS_OPTIONS.map((s) => (
+              <button
+                key={s.value}
+                type="button"
+                onClick={() => setStatus(s.value)}
+                className={`py-3 rounded-xl border-2 text-sm font-medium transition-colors ${
+                  status === s.value
+                    ? "border-orange-500 bg-orange-50 text-orange-700"
+                    : "border-gray-200 text-gray-500 hover:border-gray-300"
+                }`}
+              >
+                {s.value === "DRAFT" && "📝 "}
+                {s.value === "PUBLISHED" && "✅ "}
+                {s.value === "CANCELLED" && "❌ "}
+                {s.value === "FINISHED" && "🏁 "}
+                {s.label}
+              </button>
+            ))}
           </div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6 space-y-4">
+          <h2 className="font-semibold text-gray-800">Informações do Evento</h2>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Título</label>

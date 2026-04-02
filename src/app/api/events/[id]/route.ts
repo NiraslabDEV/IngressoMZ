@@ -24,11 +24,7 @@ const updateEventSchema = z.object({
     .max(200)
     .refine((v) => !HTML_TAG_RE.test(v), { message: "Local inválido." })
     .optional(),
-  startsAt: z
-    .string()
-    .datetime()
-    .refine((v) => new Date(v) > new Date(), { message: "Data deve ser no futuro." })
-    .optional(),
+  startsAt: z.string().datetime().optional(),
   endsAt: z.string().datetime().optional(),
   status: z.enum(["DRAFT", "PUBLISHED", "CANCELLED", "FINISHED"]).optional(),
 });

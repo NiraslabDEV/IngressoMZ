@@ -9,6 +9,7 @@ const updateSchema = z.object({
   name: z.string().min(2).max(100).optional(),
   currentPassword: z.string().optional(),
   newPassword: z.string().min(8).max(100).optional(),
+  role: z.enum(["ORGANIZER"]).optional(), // só permite upgrade para ORGANIZER
 });
 
 export async function PATCH(req: Request) {
@@ -23,7 +24,7 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Dados inválidos", details: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { name, currentPassword, newPassword } = parsed.data;
+  const { name, currentPassword, newPassword, role } = parsed.data;
 
   // Buscar utilizador actual
   const user = await db.user.findUnique({ where: { id: session.user.id } });
@@ -50,6 +51,7 @@ export async function PATCH(req: Request) {
     data: {
       ...(name ? { name } : {}),
       ...(newPassword ? { passwordHash: await bcrypt.hash(newPassword, 12) } : {}),
+      ...(role ? { role } : {}),
     },
     select: { id: true, name: true, email: true, role: true },
   });
