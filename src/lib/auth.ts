@@ -5,6 +5,7 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 
+
 const credentialsSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
@@ -46,10 +47,29 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
-        token.id = user.id as string;
-        token.role = (user as unknown as { role: string }).role;
+        // Login com credentials — id já é o UUID do Prisma
+        if (!account || account.provider === "credentials") {
+          token.id = user.id as string;
+          token.role = (user as unknown as { role: string }).role;
+        } else {
+          // Login social (Google, etc.) — criar ou recuperar utilizador no Prisma
+          const email = user.email ?? token.email;
+          if (email) {
+            const dbUser = await db.user.upsert({
+              where: { email },
+              update: {},
+              create: {
+                email,
+                name: user.name ?? email.split("@")[0],
+                role: "BUYER",
+              },
+            });
+            token.id = dbUser.id;
+            token.role = dbUser.role;
+          }
+        }
       }
       return token;
     },
