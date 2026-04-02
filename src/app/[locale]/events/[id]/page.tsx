@@ -96,6 +96,29 @@ export default async function EventPage({
               )}
             </dl>
           </div>
+
+          {/* Mapa */}
+          <div className="bg-gray-900 rounded-2xl border border-gray-800 p-6">
+            <h2 className="font-semibold text-white mb-4">Localização</h2>
+            <div className="rounded-xl overflow-hidden">
+              <iframe
+                title={`Mapa - ${event.venue}`}
+                src={`https://maps.google.com/maps?q=${encodeURIComponent(event.venue)}&output=embed`}
+                className="w-full h-64 md:h-80 border-0"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                allowFullScreen
+              />
+            </div>
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.venue)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 mt-3 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              Abrir no Google Maps →
+            </a>
+          </div>
         </div>
 
         {/* Compra */}
