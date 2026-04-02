@@ -7,10 +7,10 @@ export const dynamic = "force-dynamic";
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
-    DRAFT: "bg-gray-100 text-gray-600",
-    PUBLISHED: "bg-green-100 text-green-700",
-    CANCELLED: "bg-red-100 text-red-700",
-    FINISHED: "bg-blue-100 text-blue-700",
+    DRAFT: "bg-gray-800 text-gray-300",
+    PUBLISHED: "bg-green-950 text-green-400",
+    CANCELLED: "bg-red-950 text-red-400",
+    FINISHED: "bg-blue-950 text-blue-400",
   };
   const labels: Record<string, string> = {
     DRAFT: "Rascunho",
@@ -38,23 +38,23 @@ export default async function EventsPage({ params }: { params: { locale: string 
   });
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="min-h-screen bg-black p-4 md:p-8 max-w-5xl">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Meus Eventos</h1>
+        <h1 className="text-2xl font-bold text-white">Meus Eventos</h1>
         <Link
           href={`/${params.locale}/organizer/events/new`}
-          className="bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          className="bg-blue-400 hover:bg-blue-300 text-black text-sm font-medium px-4 py-2 rounded-lg transition-colors"
         >
           + Criar Evento
         </Link>
       </div>
 
       {events.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 px-6 py-16 text-center">
+        <div className="bg-gray-900 rounded-xl border border-gray-800 px-6 py-16 text-center">
           <p className="text-gray-400 text-sm mb-4">Nenhum evento criado ainda.</p>
           <Link
             href={`/${params.locale}/organizer/events/new`}
-            className="bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors"
+            className="bg-blue-400 hover:bg-blue-300 text-black text-sm font-medium px-5 py-2.5 rounded-lg transition-colors"
           >
             Criar primeiro evento
           </Link>
@@ -69,14 +69,14 @@ export default async function EventsPage({ params }: { params: { locale: string 
             return (
               <div
                 key={event.id}
-                className="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-6"
+                className="bg-gray-900 rounded-xl border border-gray-800 p-5 flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-semibold text-gray-900 truncate">{event.title}</h3>
+                    <h3 className="font-semibold text-white truncate">{event.title}</h3>
                     <StatusBadge status={event.status} />
                   </div>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-400">
                     📍 {event.venue} &nbsp;·&nbsp;{" "}
                     {new Date(event.startsAt).toLocaleDateString("pt-MZ", {
                       day: "2-digit",
@@ -87,39 +87,39 @@ export default async function EventsPage({ params }: { params: { locale: string 
                     })}
                   </p>
                   {event.status === "DRAFT" && (
-                    <p className="text-xs text-orange-600 mt-1">
+                    <p className="text-xs text-blue-400 mt-1">
                       ⚠️ Rascunho — edita e muda para <strong>Publicado</strong> para aparecer na homepage
                     </p>
                   )}
                 </div>
 
                 {/* Barra de ingressos */}
-                <div className="w-40 shrink-0">
-                  <div className="flex justify-between text-xs text-gray-500 mb-1">
+                <div className="w-full md:w-40 shrink-0">
+                  <div className="flex justify-between text-xs text-gray-400 mb-1">
                     <span>Ingressos</span>
                     <span>
                       {soldQty}/{totalQty} ({pct}%)
                     </span>
                   </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-orange-400 rounded-full transition-all"
+                      className="h-full bg-blue-400 rounded-full transition-all"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
                 </div>
 
                 {/* Acções */}
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 shrink-0 w-full md:w-auto">
                   <Link
                     href={`/${params.locale}/organizer/events/${event.id}/edit`}
-                    className="text-sm text-gray-600 hover:text-gray-900 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex-1 md:flex-none text-sm text-gray-300 hover:text-white border border-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-800 transition-colors text-center"
                   >
                     Editar
                   </Link>
                   <Link
                     href={`/${params.locale}/organizer/events/${event.id}/checkin`}
-                    className="text-sm text-orange-600 hover:text-orange-700 border border-orange-200 px-3 py-1.5 rounded-lg hover:bg-orange-50 transition-colors"
+                    className="flex-1 md:flex-none text-sm text-blue-400 hover:text-blue-300 border border-blue-900 px-3 py-1.5 rounded-lg hover:bg-blue-950 transition-colors text-center"
                   >
                     Check-in
                   </Link>

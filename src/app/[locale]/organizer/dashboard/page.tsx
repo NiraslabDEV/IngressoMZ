@@ -11,10 +11,10 @@ function fmt(value: number) {
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
-    DRAFT: "bg-gray-100 text-gray-600",
-    PUBLISHED: "bg-green-100 text-green-700",
-    CANCELLED: "bg-red-100 text-red-700",
-    FINISHED: "bg-blue-100 text-blue-700",
+    DRAFT: "bg-gray-800 text-gray-300",
+    PUBLISHED: "bg-green-950 text-green-400",
+    CANCELLED: "bg-red-950 text-red-400",
+    FINISHED: "bg-blue-950 text-blue-400",
   };
   const labels: Record<string, string> = {
     DRAFT: "Rascunho",
@@ -64,58 +64,58 @@ export default async function DashboardPage({ params }: { params: { locale: stri
   );
 
   return (
-    <div className="p-8 max-w-6xl">
+    <div className="min-h-screen bg-black p-4 md:p-8 max-w-6xl">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
         <Link
           href={`/${params.locale}/organizer/events/new`}
-          className="bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          className="bg-blue-400 hover:bg-blue-300 text-black text-sm font-medium px-4 py-2 rounded-lg transition-colors"
         >
           + Criar Evento
         </Link>
       </div>
 
       {/* Cards de resumo */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Arrecadado</p>
-          <p className="text-2xl font-bold text-gray-900">{fmt(totals.gross)}</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="bg-gray-900 rounded-xl border border-gray-800 p-5">
+          <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Total Arrecadado</p>
+          <p className="text-2xl font-bold text-white">{fmt(totals.gross)}</p>
           <p className="text-xs text-gray-400 mt-1">MZN</p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Taxa Plataforma</p>
-          <p className="text-2xl font-bold text-orange-500">{fmt(totals.fee)}</p>
+        <div className="bg-gray-900 rounded-xl border border-gray-800 p-5">
+          <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Taxa Plataforma</p>
+          <p className="text-2xl font-bold text-blue-400">{fmt(totals.fee)}</p>
           <p className="text-xs text-gray-400 mt-1">MZN</p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">A Receber</p>
-          <p className="text-2xl font-bold text-green-600">{fmt(totals.net)}</p>
+        <div className="bg-gray-900 rounded-xl border border-gray-800 p-5">
+          <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">A Receber</p>
+          <p className="text-2xl font-bold text-green-400">{fmt(totals.net)}</p>
           <p className="text-xs text-gray-400 mt-1">MZN — pago após o evento</p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Ingressos Vendidos</p>
-          <p className="text-2xl font-bold text-gray-900">{totals.tickets}</p>
+        <div className="bg-gray-900 rounded-xl border border-gray-800 p-5">
+          <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Ingressos Vendidos</p>
+          <p className="text-2xl font-bold text-white">{totals.tickets}</p>
           <p className="text-xs text-gray-400 mt-1">unidades</p>
         </div>
       </div>
 
       {/* Aviso de repasse */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl px-5 py-4 mb-8 text-sm text-blue-800">
+      <div className="bg-blue-950/30 border border-blue-800 rounded-xl px-5 py-4 mb-8 text-sm text-blue-300">
         <strong>Como funciona o repasse:</strong> O valor líquido é transferido para o seu M-Pesa
         após o encerramento do evento. Certifique-se de que o seu número de M-Pesa está actualizado
         no perfil.
       </div>
 
       {/* Tabela por evento */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-800">Ganhos por Evento</h2>
+      <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-800">
+          <h2 className="font-semibold text-white">Ganhos por Evento</h2>
         </div>
 
         {eventsData.length === 0 ? (
           <div className="px-6 py-12 text-center text-gray-400 text-sm">
             Nenhum evento criado ainda.{" "}
-            <Link href={`/${params.locale}/organizer/events/new`} className="text-orange-500 hover:underline">
+            <Link href={`/${params.locale}/organizer/events/new`} className="text-blue-400 hover:text-blue-300">
               Criar primeiro evento
             </Link>
           </div>
@@ -123,7 +123,7 @@ export default async function DashboardPage({ params }: { params: { locale: stri
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
+                <tr className="bg-gray-800 text-xs text-gray-400 uppercase tracking-wide">
                   <th className="text-left px-6 py-3 font-medium">Evento</th>
                   <th className="text-left px-6 py-3 font-medium">Status</th>
                   <th className="text-right px-6 py-3 font-medium">Ingressos</th>
@@ -132,13 +132,13 @@ export default async function DashboardPage({ params }: { params: { locale: stri
                   <th className="text-right px-6 py-3 font-medium">Líquido (MZN)</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-gray-800">
                 {eventsData.map((event) => (
-                  <tr key={event.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={event.id} className="hover:bg-gray-800/50 transition-colors">
                     <td className="px-6 py-4">
                       <Link
                         href={`/${params.locale}/organizer/events/${event.id}/edit`}
-                        className="font-medium text-gray-900 hover:text-orange-600 transition-colors"
+                        className="font-medium text-white hover:text-blue-400 transition-colors"
                       >
                         {event.title}
                       </Link>
@@ -153,13 +153,13 @@ export default async function DashboardPage({ params }: { params: { locale: stri
                     <td className="px-6 py-4">
                       <StatusBadge status={event.status} />
                     </td>
-                    <td className="px-6 py-4 text-right text-gray-700">
+                    <td className="px-6 py-4 text-right text-gray-300">
                       {event.soldQty}
-                      <span className="text-gray-400">/{event.totalQty}</span>
+                      <span className="text-gray-500">/{event.totalQty}</span>
                     </td>
-                    <td className="px-6 py-4 text-right text-gray-700">{fmt(event.gross)}</td>
-                    <td className="px-6 py-4 text-right text-orange-500">{fmt(event.fee)}</td>
-                    <td className="px-6 py-4 text-right font-semibold text-green-600">
+                    <td className="px-6 py-4 text-right text-gray-300">{fmt(event.gross)}</td>
+                    <td className="px-6 py-4 text-right text-blue-400">{fmt(event.fee)}</td>
+                    <td className="px-6 py-4 text-right font-semibold text-green-400">
                       {fmt(event.net)}
                     </td>
                   </tr>
