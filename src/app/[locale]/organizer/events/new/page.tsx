@@ -273,5 +273,6 @@ export default function NewEventPage() {
         </div>
       </form>
     </div>
+    </div>
   );
 }
