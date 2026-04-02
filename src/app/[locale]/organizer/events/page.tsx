@@ -3,6 +3,8 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
     DRAFT: "bg-gray-100 text-gray-600",
@@ -84,6 +86,11 @@ export default async function EventsPage({ params }: { params: { locale: string 
                       minute: "2-digit",
                     })}
                   </p>
+                  {event.status === "DRAFT" && (
+                    <p className="text-xs text-orange-600 mt-1">
+                      ⚠️ Rascunho — edita e muda para <strong>Publicado</strong> para aparecer na homepage
+                    </p>
+                  )}
                 </div>
 
                 {/* Barra de ingressos */}
