@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { renderToBuffer } from "@react-pdf/renderer";
-import { TicketPdfDocument } from "@/lib/pdf";
-
-export const runtime = "nodejs";
+import { generateTicketPdf } from "@/lib/pdf";
 
 type RouteParams = { params: { token: string } };
 
@@ -32,13 +29,12 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: "Ingresso não encontrado." }, { status: 404 });
   }
 
-  // Só o comprador pode descarregar
   if (ticket.order.buyerId !== session.user.id) {
     return NextResponse.json({ error: "Proibido." }, { status: 403 });
   }
 
   const { order } = ticket;
-  const doc = await TicketPdfDocument({
+  const buffer = await generateTicketPdf({
     eventName: order.event.title,
     venue: order.event.venue,
     startsAt: new Date(order.event.startsAt).toLocaleDateString("pt-MZ", {
@@ -57,9 +53,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
     ticketId: ticket.id,
   });
 
-  const buffer = await renderToBuffer(doc);
-
-  return new NextResponse(buffer as unknown as BodyInit, {
+  return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="ingresso-${ticket.id.slice(0, 8)}.pdf"`,

@@ -1,10 +1,9 @@
-import { renderToBuffer } from "@react-pdf/renderer";
-import { TicketPdfDocument } from "@/lib/pdf";
+import { generateTicketPdf } from "@/lib/pdf";
 import { sendTicketEmail } from "@/lib/email";
 import { db } from "@/lib/db";
 
 /**
- * Gera PDF para todos os tickets de uma order e envia por email ao comprador.
+ * Gera PDF para o primeiro ticket da order e envia por email ao comprador.
  * Chama apenas quando a order passa a PAID.
  */
 export async function sendOrderConfirmationEmail(orderId: string) {
@@ -19,9 +18,12 @@ export async function sendOrderConfirmationEmail(orderId: string) {
 
   if (!order) return;
 
-  // Agrupar tickets por tier para nome no email
+  const activeTickets = order.tickets.filter((t) => t.status === "ACTIVE");
+  if (activeTickets.length === 0) return;
+
+  // Tier summary for email
   const tierCounts: Record<string, number> = {};
-  for (const t of order.tickets) {
+  for (const t of activeTickets) {
     tierCounts[t.tier.name] = (tierCounts[t.tier.name] ?? 0) + 1;
   }
   const tierSummary = Object.entries(tierCounts)
@@ -37,31 +39,20 @@ export async function sendOrderConfirmationEmail(orderId: string) {
     minute: "2-digit",
   });
 
-  // Gerar PDF do primeiro ticket activo (PDF por ingresso individual)
-  // Se tiver vários, geramos um PDF por ticket em anexo separado — por simplicidade usamos só o primeiro
-  // Para múltiplos tickets, podes expandir para múltiplos attachments
-  const activeTickets = order.tickets.filter((t) => t.status === "ACTIVE");
-  if (activeTickets.length === 0) return;
+  // Generate PDF for first ticket
+  const ticket = activeTickets[0];
+  const pdfBuffer = await generateTicketPdf({
+    eventName: order.event.title,
+    venue: order.event.venue,
+    startsAt: startsAtStr,
+    tierName: ticket.tier.name,
+    buyerName: order.buyer.name ?? "—",
+    buyerEmail: order.buyer.email,
+    token: ticket.token,
+    orderId: order.id,
+    ticketId: ticket.id,
+  });
 
-  const pdfBuffers = await Promise.all(
-    activeTickets.map(async (ticket) => {
-      const doc = await TicketPdfDocument({
-        eventName: order.event.title,
-        venue: order.event.venue,
-        startsAt: startsAtStr,
-        tierName: ticket.tier.name,
-        buyerName: order.buyer.name ?? "—",
-        buyerEmail: order.buyer.email,
-        token: ticket.token,
-        orderId: order.id,
-        ticketId: ticket.id,
-      });
-      return { buffer: await renderToBuffer(doc), ticketId: ticket.id };
-    })
-  );
-
-  // Envia email com o primeiro PDF em anexo (Resend free tier: 1 attachment)
-  // Se quiseres múltiplos anexos, substitui pelo array completo
   await sendTicketEmail({
     to: order.buyer.email,
     buyerName: order.buyer.name ?? "Cliente",
@@ -70,7 +61,7 @@ export async function sendOrderConfirmationEmail(orderId: string) {
     startsAt: startsAtStr,
     tierName: tierSummary,
     orderId: order.id,
-    pdfBuffer: pdfBuffers[0].buffer,
+    pdfBuffer,
     ticketCount: activeTickets.length,
   });
 }
