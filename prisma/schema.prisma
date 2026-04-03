@@ -72,6 +72,7 @@ model Event {
   startsAt           DateTime
   endsAt             DateTime?
   imageUrl           String?
+  mainArtist         String?     @db.VarChar(120)
   status             EventStatus @default(DRAFT)
   platformFeePercent Decimal     @default(7.5) @db.Decimal(5, 2)
   createdAt          DateTime    @default(now())

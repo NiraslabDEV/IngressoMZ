@@ -3,23 +3,24 @@ import Link from "next/link";
 import Image from "next/image";
 import { HighlightsCarousel } from "@/components/HighlightsCarousel";
 
-/* ─── Hero animado com glassmorphism ──────────────────────────────────────── */
+function fmt(value: number) {
+  return value.toLocaleString("pt-MZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+/* ─── Hero ────────────────────────────────────────────────────────────────── */
 function HeroSection({ locale }: { locale: string }) {
   return (
     <section className="relative bg-gray-950 overflow-hidden">
-      {/* Background */}
       <div className="absolute inset-0">
         <Image
           src="https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=1920&q=80"
           alt=""
           fill
-          className="w-full h-full object-cover opacity-30"
+          className="object-cover opacity-30"
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-b from-gray-950/50 via-gray-950/80 to-gray-950" />
       </div>
-
-      {/* Conteúdo */}
       <div className="relative max-w-5xl mx-auto px-6 pt-32 pb-24 text-center">
         <p className="text-blue-400 text-sm font-semibold tracking-widest uppercase mb-4 animate-fade-in">
           A plataforma de eventos de Moçambique
@@ -32,16 +33,14 @@ function HeroSection({ locale }: { locale: string }) {
           Concertos, festivais, teatro e muito mais. Compra ingressos com M-Pesa em segundos e recebe o teu QR code na hora.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-up" style={{ animationDelay: "0.2s" }}>
-          <a href="#events" className="bg-blue-400 text-black font-semibold px-8 py-4 rounded-full hover:bg-blue-300 transition-colors duration-200 text-base">
+          <a href="#events" className="bg-blue-400 text-black font-semibold px-8 py-4 rounded-full hover:bg-blue-300 transition-colors text-base">
             Explorar eventos
           </a>
-          <Link href={`/${locale}/auth/register`} className="border border-blue-400/30 text-white font-semibold px-8 py-4 rounded-full hover:bg-blue-400/10 transition-colors duration-200 text-base backdrop-blur-sm">
+          <Link href={`/${locale}/auth/login`} className="border border-blue-400/30 text-white font-semibold px-8 py-4 rounded-full hover:bg-blue-400/10 transition-colors text-base backdrop-blur-sm">
             Criar conta gratis
           </Link>
         </div>
       </div>
-
-      {/* Stats bar */}
       <div className="relative border-t border-gray-800 bg-black/50 backdrop-blur-md">
         <div className="max-w-5xl mx-auto px-6 py-8 grid grid-cols-3 gap-8 text-center">
           <div>
@@ -54,7 +53,7 @@ function HeroSection({ locale }: { locale: string }) {
           </div>
           <div>
             <p className="text-3xl font-bold text-blue-400">M-Pesa</p>
-            <p className="text-sm text-gray-400 mt-1">Pagamento instantaneo</p>
+            <p className="text-sm text-gray-400 mt-1">Pagamento instantâneo</p>
           </div>
         </div>
       </div>
@@ -62,12 +61,7 @@ function HeroSection({ locale }: { locale: string }) {
   );
 }
 
-/* ─── Helpers ─────────────────────────────────────────────────────────────── */
-function fmt(value: number) {
-  return value.toLocaleString("pt-MZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-/* ─── Card compacto — grelha próximos eventos ─────────────────────────────── */
+/* ─── Event Card — estilo Ticket360 (flyer + info por baixo) ──────────────── */
 function EventCard({
   event,
   locale,
@@ -78,6 +72,9 @@ function EventCard({
     venue: string;
     startsAt: Date;
     imageUrl: string | null;
+    mainArtist: string | null;
+    organizerName: string;
+    organizerInitials: string;
     tiers: { price: number; soldQty: number; totalQty: number }[];
   };
   locale: string;
@@ -85,60 +82,71 @@ function EventCard({
   const tiers = event.tiers;
   const minPrice = tiers.length ? Math.min(...tiers.map((t) => t.price)) : null;
   const soldOut = tiers.every((t) => t.soldQty >= t.totalQty);
-  const totalSold = tiers.reduce((a, t) => a + t.soldQty, 0);
-  const totalQty = tiers.reduce((a, t) => a + t.totalQty, 0);
-  const remaining = totalQty - totalSold;
-  const isLastTickets = !soldOut && remaining > 0 && remaining <= Math.ceil(totalQty * 0.1);
-  const isBestSeller = !soldOut && totalSold >= Math.ceil(totalQty * 0.7);
+
+  const dateObj = new Date(event.startsAt);
+  const month = dateObj.toLocaleDateString("pt-MZ", { month: "short" }).toUpperCase().replace(".", "");
+  const day = dateObj.toLocaleDateString("pt-MZ", { day: "2-digit" });
+  const weekday = dateObj.toLocaleDateString("pt-MZ", { weekday: "short" }).toUpperCase().replace(".", "");
+  const time = dateObj.toLocaleTimeString("pt-MZ", { hour: "2-digit", minute: "2-digit" });
 
   return (
     <Link
       href={`/${locale}/events/${event.id}`}
-      className="group block rounded-xl overflow-hidden hover:-translate-y-1 transition-all duration-200"
+      className="group block bg-gray-950 rounded-xl overflow-hidden hover:-translate-y-1 hover:shadow-xl hover:shadow-black/40 transition-all duration-200"
     >
-      <div className="relative aspect-[3/4] bg-gray-800 overflow-hidden rounded-xl">
+      {/* Flyer limpo — sem overlay */}
+      <div className="relative aspect-[3/4] bg-gray-800 overflow-hidden">
         <Image
           src={event.imageUrl ?? `https://picsum.photos/seed/${event.id}/300/400`}
           alt={event.title}
           fill
           className="object-cover group-hover:scale-105 transition-transform duration-500"
         />
-
-        {/* Badges */}
-        <div className="absolute top-2 left-2 flex flex-col gap-1">
-          {isBestSeller && (
-            <span className="bg-orange-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
-              🔥 Mais vendido
-            </span>
-          )}
-          {isLastTickets && (
-            <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow animate-pulse">
-              ⚡ Últimos
-            </span>
-          )}
-        </div>
-
-        {/* Data */}
-        <span className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
-          {new Date(event.startsAt).toLocaleDateString("pt-MZ", { day: "2-digit", month: "short" })}
-        </span>
-
         {soldOut && (
           <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
             <span className="bg-white text-gray-900 text-xs font-bold px-3 py-1 rounded-full">Esgotado</span>
           </div>
         )}
+      </div>
 
-        {/* Info overlay */}
-        <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black via-black/60 to-transparent px-3 pt-8 pb-3">
-          <p className="text-white font-bold text-xs line-clamp-2 leading-snug">{event.title}</p>
-          <p className="text-gray-400 text-[10px] mt-0.5 line-clamp-1">{event.venue}</p>
-          {minPrice !== null && !soldOut && (
-            <p className="text-blue-400 font-black text-sm mt-1">
-              {fmt(minPrice)} <span className="text-[10px] font-normal text-blue-300">MZN</span>
-            </p>
-          )}
+      {/* Info por baixo do flyer */}
+      <div className="p-3">
+        {/* Data box + horário + local */}
+        <div className="flex gap-3 items-start mb-2.5">
+          {/* Date box */}
+          <div className="flex-shrink-0 w-12 bg-gray-900 border border-gray-800 rounded-lg text-center py-1.5">
+            <p className="text-[9px] font-bold text-blue-400 uppercase leading-none">{month}</p>
+            <p className="text-lg font-black text-white leading-tight">{day}</p>
+            <p className="text-[9px] font-semibold text-gray-500 uppercase leading-none">{weekday}</p>
+          </div>
+          <div className="min-w-0 flex-1 pt-0.5">
+            <p className="text-[11px] text-gray-400">Abertura: {time}</p>
+            <p className="text-[11px] text-gray-400 truncate">{event.venue}</p>
+          </div>
         </div>
+
+        {/* Organizador bolinha + nome do evento + artista */}
+        <div className="flex items-start gap-2.5">
+          {/* Avatar do organizador */}
+          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+            <span className="text-white text-[10px] font-bold leading-none">{event.organizerInitials}</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-white text-sm font-bold leading-snug line-clamp-2">{event.title}</p>
+            {event.mainArtist && (
+              <p className="text-gray-400 text-xs mt-0.5 line-clamp-1">{event.mainArtist}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Preço */}
+        {minPrice !== null && !soldOut && (
+          <div className="mt-2.5 pt-2 border-t border-gray-800">
+            <p className="text-blue-400 font-black text-sm">
+              {fmt(minPrice)} <span className="text-[10px] font-normal text-gray-500">MZN</span>
+            </p>
+          </div>
+        )}
       </div>
     </Link>
   );
@@ -155,6 +163,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
     include: {
       event: {
         include: {
+          organizer: { select: { name: true } },
           tiers: { select: { price: true, soldQty: true, totalQty: true } },
         },
       },
@@ -172,30 +181,41 @@ export default async function HomePage({ params }: { params: { locale: string } 
     orderBy: { startsAt: "asc" },
     take: 24,
     include: {
+      organizer: { select: { name: true } },
       tiers: { select: { price: true, soldQty: true, totalQty: true } },
     },
   });
 
-  const highlightEvents = highlights.map((h) => ({
-    id: h.event.id,
-    title: h.event.title,
-    venue: h.event.venue,
-    startsAt: h.event.startsAt,
-    imageUrl: h.event.imageUrl,
-    tiers: h.event.tiers.map((t) => ({
-      price: Number(t.price),
-      soldQty: t.soldQty,
-      totalQty: t.totalQty,
-    })),
-  }));
+  function getInitials(name: string) {
+    return name.split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+  }
+
+  function normalizeEvent(e: typeof upcoming[0]) {
+    return {
+      id: e.id,
+      title: e.title,
+      venue: e.venue,
+      startsAt: e.startsAt,
+      imageUrl: e.imageUrl,
+      mainArtist: e.mainArtist,
+      organizerName: e.organizer.name,
+      organizerInitials: getInitials(e.organizer.name),
+      tiers: e.tiers.map((t) => ({
+        price: Number(t.price),
+        soldQty: t.soldQty,
+        totalQty: t.totalQty,
+      })),
+    };
+  }
+
+  const highlightEvents = highlights.map((h) => normalizeEvent(h.event));
 
   return (
     <div className="min-h-screen bg-black text-white">
 
-      {/* ── Hero Section ── */}
       <HeroSection locale={locale} />
 
-      {/* ── Destaques: carrossel de cards grandes ── */}
+      {/* ── Destaques: carrossel ── */}
       {highlightEvents.length > 0 && (
         <section className="pt-8 pb-4">
           <div className="max-w-[1400px] mx-auto px-4">
@@ -205,7 +225,7 @@ export default async function HomePage({ params }: { params: { locale: string } 
         </section>
       )}
 
-      {/* ── Banner wide do primeiro destaque ── */}
+      {/* ── Banner wide ── */}
       {highlightEvents[0] && (
         <section className="max-w-[1400px] mx-auto px-4 mt-4 mb-6">
           <Link
@@ -218,7 +238,6 @@ export default async function HomePage({ params }: { params: { locale: string } 
                 alt={highlightEvents[0].title}
                 fill
                 className="object-cover group-hover:scale-[1.02] transition-transform duration-700"
-                priority
               />
               <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 to-transparent" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
@@ -227,10 +246,13 @@ export default async function HomePage({ params }: { params: { locale: string } 
               <span className="inline-block bg-blue-400 text-black text-xs font-bold px-3 py-1 rounded-full mb-3 w-fit">
                 ⭐ Em destaque
               </span>
-              <h2 className="text-2xl md:text-4xl font-black text-white line-clamp-2 mb-2 max-w-lg">
+              <h2 className="text-2xl md:text-4xl font-black text-white line-clamp-2 mb-1 max-w-lg">
                 {highlightEvents[0].title}
               </h2>
-              <p className="text-sm text-gray-300 mb-4 flex items-center gap-1.5">
+              {highlightEvents[0].mainArtist && (
+                <p className="text-base text-gray-300 mb-3">{highlightEvents[0].mainArtist}</p>
+              )}
+              <p className="text-sm text-gray-400 mb-4 flex items-center gap-1.5">
                 <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -271,18 +293,11 @@ export default async function HomePage({ params }: { params: { locale: string } 
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {upcoming.map((event) => (
               <EventCard
                 key={event.id}
-                event={{
-                  ...event,
-                  tiers: event.tiers.map((t) => ({
-                    price: Number(t.price),
-                    soldQty: t.soldQty,
-                    totalQty: t.totalQty,
-                  })),
-                }}
+                event={normalizeEvent(event)}
                 locale={locale}
               />
             ))}

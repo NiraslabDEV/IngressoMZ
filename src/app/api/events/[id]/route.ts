@@ -27,6 +27,7 @@ const updateEventSchema = z.object({
   startsAt: z.string().datetime().optional(),
   endsAt: z.string().datetime().optional(),
   imageUrl: z.string().url().optional().nullable(),
+  mainArtist: z.string().max(120).optional().nullable(),
   status: z.enum(["DRAFT", "PUBLISHED", "CANCELLED", "FINISHED"]).optional(),
 });
 

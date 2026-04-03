@@ -22,6 +22,7 @@ export default function NewEventPage() {
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [mainArtist, setMainArtist] = useState("");
   const [tiers, setTiers] = useState<Tier[]>([
     { name: "", price: "", totalQty: "", salesEndAt: "" },
   ]);
@@ -53,6 +54,7 @@ export default function NewEventPage() {
       startsAt: new Date(startsAt).toISOString(),
       endsAt: endsAt ? new Date(endsAt).toISOString() : undefined,
       imageUrl: imageUrl || undefined,
+      mainArtist: mainArtist || undefined,
       tiers: tiers.map((t) => ({
         name: t.name,
         price: parseFloat(t.price),
@@ -149,6 +151,20 @@ export default function NewEventPage() {
               required
               className="w-full border border-gray-700 rounded-lg px-3 py-2 text-sm bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
               placeholder="Ex: Praça dos Trabalhadores, Maputo"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1">
+              Artista principal <span className="text-gray-500 font-normal">(opcional)</span>
+            </label>
+            <input
+              type="text"
+              value={mainArtist}
+              onChange={(e) => setMainArtist(e.target.value)}
+              maxLength={120}
+              className="w-full border border-gray-700 rounded-lg px-3 py-2 text-sm bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+              placeholder="Ex: DJ Maphorisa, Neyma"
             />
           </div>
 
