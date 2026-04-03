@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
+import { InstallButton } from "./InstallButton";
 
 interface UserMenuProps {
   name: string;
@@ -60,6 +61,8 @@ export function UserMenu({ name, email, locale }: UserMenuProps) {
             <p className="text-sm font-medium text-gray-900 truncate">{name}</p>
             <p className="text-xs text-gray-500 truncate">{email}</p>
           </div>
+
+          <InstallButton />
 
           <Link
             href={`/${locale}/account`}
