@@ -7,6 +7,7 @@ import { authOptions } from "@/lib/auth";
 import Link from "next/link";
 import { UserMenu } from "@/components/UserMenu";
 import { Providers } from "@/components/Providers";
+import { InstallButton } from "@/components/InstallButton";
 import "../globals.css";
 
 export const metadata: Metadata = {
@@ -46,6 +47,7 @@ async function Navbar({ locale }: { locale: string }) {
         <nav className="flex items-center gap-6">
           {session?.user ? (
             <>
+              <InstallButton />
               {role === "ORGANIZER" && (
                 <>
                   <Link
@@ -78,6 +80,7 @@ async function Navbar({ locale }: { locale: string }) {
             </>
           ) : (
             <>
+              <InstallButton />
               <Link
                 href={`/${locale}/auth/login`}
                 className="text-sm font-medium text-gray-300 hover:text-white transition-colors duration-200"
