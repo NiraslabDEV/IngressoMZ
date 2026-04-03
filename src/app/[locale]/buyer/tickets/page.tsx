@@ -12,9 +12,9 @@ async function getQR(token: string): Promise<string> {
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
-    ACTIVE: "bg-green-100 text-green-700",
-    USED: "bg-gray-100 text-gray-500",
-    CANCELLED: "bg-red-100 text-red-600",
+    ACTIVE: "bg-green-500/20 text-green-400",
+    USED: "bg-gray-500/20 text-gray-400",
+    CANCELLED: "bg-red-500/20 text-red-400",
   };
   const labels: Record<string, string> = {
     ACTIVE: "Válido",
@@ -56,16 +56,16 @@ export default async function TicketsPage({ params }: { params: { locale: string
   );
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10">
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">Meus Ingressos</h1>
+    <div className="max-w-4xl mx-auto px-4 py-10 bg-black min-h-screen">
+      <h1 className="text-2xl font-bold text-white mb-8">Meus Ingressos</h1>
 
       {ticketsWithQR.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-200 py-16 text-center">
+        <div className="bg-gray-900 rounded-2xl border border-gray-800 py-16 text-center">
           <p className="text-5xl mb-4">🎟️</p>
-          <p className="text-gray-500 mb-4">Ainda não compraste nenhum ingresso.</p>
+          <p className="text-gray-400 mb-4">Ainda não compraste nenhum ingresso.</p>
           <Link
             href={`/${params.locale}`}
-            className="bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors"
+            className="bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors"
           >
             Ver eventos
           </Link>
@@ -75,42 +75,43 @@ export default async function TicketsPage({ params }: { params: { locale: string
           {ticketsWithQR.map((ticket) => (
             <div
               key={ticket.id}
-              className={`bg-white rounded-2xl border overflow-hidden ${
-                ticket.status === "ACTIVE" ? "border-gray-200" : "border-gray-100 opacity-70"
+              className={`bg-gray-900 rounded-2xl border overflow-hidden ${
+                ticket.status === "ACTIVE" ? "border-gray-800" : "border-gray-800/50 opacity-70"
               }`}
             >
-              {/* Header colorido */}
-              <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-5 py-4 text-white">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-5 py-4 text-white">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="font-semibold text-sm line-clamp-1">{ticket.event.title}</p>
-                    <p className="text-orange-100 text-xs mt-0.5">{ticket.tier.name}</p>
+                    <p className="text-blue-100 text-xs mt-0.5">{ticket.tier.name}</p>
                   </div>
                   <StatusBadge status={ticket.status} />
                 </div>
               </div>
 
               <div className="p-5 flex items-center gap-5">
-                {/* QR Code */}
+                {/* QR Code — fundo branco para facilitar scan */}
                 {ticket.qrDataUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={ticket.qrDataUrl}
-                    alt="QR Code do ingresso"
-                    className="w-24 h-24 rounded-lg border border-gray-100"
-                  />
+                  <div className="w-24 h-24 rounded-lg bg-white p-1 flex items-center justify-center">
+                    <img
+                      src={ticket.qrDataUrl}
+                      alt="QR Code do ingresso"
+                      className="w-full h-full"
+                    />
+                  </div>
                 ) : (
-                  <div className="w-24 h-24 rounded-lg bg-gray-100 flex items-center justify-center text-3xl">
+                  <div className="w-24 h-24 rounded-lg bg-gray-800 flex items-center justify-center text-3xl">
                     {ticket.status === "USED" ? "✅" : "❌"}
                   </div>
                 )}
 
                 {/* Info */}
                 <div className="flex-1 min-w-0 text-sm">
-                  <p className="text-gray-500 flex items-center gap-1">
+                  <p className="text-gray-400 flex items-center gap-1">
                     📍 <span className="truncate">{ticket.event.venue}</span>
                   </p>
-                  <p className="text-gray-500 mt-1">
+                  <p className="text-gray-400 mt-1">
                     🗓️{" "}
                     {new Date(ticket.event.startsAt).toLocaleDateString("pt-MZ", {
                       day: "2-digit",
@@ -119,7 +120,7 @@ export default async function TicketsPage({ params }: { params: { locale: string
                     })}
                   </p>
                   {ticket.status === "USED" && ticket.checkedInAt && (
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-gray-500 mt-1">
                       Entrada:{" "}
                       {new Date(ticket.checkedInAt).toLocaleTimeString("pt-MZ", {
                         hour: "2-digit",
@@ -130,7 +131,7 @@ export default async function TicketsPage({ params }: { params: { locale: string
                   <div className="flex items-center gap-3 mt-2">
                     <Link
                       href={`/${params.locale}/buyer/orders/${ticket.orderId}`}
-                      className="text-xs text-orange-600 hover:underline"
+                      className="text-xs text-blue-400 hover:underline"
                     >
                       Ver pedido →
                     </Link>
