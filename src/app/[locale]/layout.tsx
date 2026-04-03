@@ -12,6 +12,19 @@ import "../globals.css";
 export const metadata: Metadata = {
   title: "Ingresso MZ — Eventos em Moçambique",
   description: "Compra os teus ingressos para os melhores eventos em Moçambique.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Ingresso MZ",
+  },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    viewportFit: "cover",
+  },
+  themeColor: "#000000",
 };
 
 const locales = ["pt", "en"];
