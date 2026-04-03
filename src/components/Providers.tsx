@@ -2,6 +2,7 @@
 
 import { SessionProvider } from "next-auth/react";
 import { useEffect } from "react";
+import { NavigationLoader } from "./NavigationLoader";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -12,5 +13,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  return <SessionProvider>{children}</SessionProvider>;
+  return (
+    <SessionProvider>
+      <NavigationLoader />
+      {children}
+    </SessionProvider>
+  );
 }
