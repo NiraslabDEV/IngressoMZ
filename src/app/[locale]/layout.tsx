@@ -46,34 +46,11 @@ async function Navbar({ locale }: { locale: string }) {
         <nav className="flex items-center gap-6">
           {session?.user ? (
             <>
-              {role === "ORGANIZER" && (
-                <>
-                  <Link
-                    href={`/${locale}/organizer/dashboard`}
-                    className="text-sm font-medium text-gray-200 hover:text-white transition-colors duration-200"
-                  >
-                    Painel
-                  </Link>
-                  <Link
-                    href={`/${locale}/buyer/tickets`}
-                    className="text-sm font-medium text-gray-200 hover:text-white transition-colors duration-200"
-                  >
-                    Meus Ingressos
-                  </Link>
-                </>
-              )}
-              {role === "BUYER" && (
-                <Link
-                  href={`/${locale}/buyer/tickets`}
-                  className="text-sm font-medium text-gray-200 hover:text-white transition-colors duration-200"
-                >
-                  Meus Ingressos
-                </Link>
-              )}
               <UserMenu
                 name={session.user.name ?? "Utilizador"}
                 email={session.user.email ?? ""}
                 locale={locale}
+                role={role}
               />
             </>
           ) : (
